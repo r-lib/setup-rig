@@ -55,7 +55,8 @@ jobs:
           echo "cache ${{ steps.setup.outputs.cache-key }} hit: ${{ steps.setup.outputs.cache-hit }}"
           R --version
           Rscript -e 'stopifnot(getRversion() == "${{ steps.setup.outputs.r-version }}")'
-      - run: rig pkg install --no-install-self --dev . rcmdcheck
+      - run: rig pkg install --no-install-self --dev .
+      - run: rig pkg install rcmdcheck
       - run: Rscript -e 'library(cli); library(testthat); library(rcmdcheck)'
       - uses: r-lib/actions/check-r-package@v2
         with:
@@ -93,7 +94,7 @@ jobs:
       - name: git for checkout
         run: |
           if command -v apt-get; then apt-get update && apt-get install -y git ca-certificates; fi
-          if command -v dnf; then dnf install -y git tar xz; fi
+          if command -v dnf; then dnf install -y git tar xz which; fi
       - uses: actions/checkout@v5
       - uses: ./
       - run: rig pkg install cli && Rscript -e 'library(cli)'
