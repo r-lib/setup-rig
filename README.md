@@ -1,19 +1,17 @@
 # setup-rig
 
 A GitHub Action that installs [rig](https://github.com/r-lib/rig), the R
-Installation Manager, then R, and the package dependencies of your R package
-or rig project. It replaces `r-lib/actions/setup-r` and
-`r-lib/actions/setup-r-dependencies` with a single step.
+Installation Manager, and R, and caches rig's cache directory. With rig on
+the `PATH`, the rest of the workflow uses rig to install packages, Rtools,
+or more R versions. Together with a `rig pkg install` or `rig proj sync`
+step it replaces `r-lib/actions/setup-r` and
+`r-lib/actions/setup-r-dependencies`.
 
 - Installs any R version that rig can: `release`, `devel`, `next`,
   `oldrel/N`, `4.5`, `4.5.2`, on Linux (x86_64, arm64), macOS (arm64,
   x86_64) and Windows (x86_64, arm64), including containers.
-- Installs Rtools on Windows.
-- Installs the dependencies of a package (`DESCRIPTION`) or a rig project
-  (`rproj.toml`) with rig, using binary packages from Posit Public Package
-  Manager where it can, and the system requirements on Linux.
-- Caches rig's cache directory, so packages built from source are not built
-  again.
+- Caches rig's cache directory, so packages that rig built from source are
+  not built again.
 
 rig runs in [user mode](https://r-lib.github.io/rig/admin-vs-user-mode.html):
 R goes into the home directory, and nothing needs `sudo` except system
@@ -52,56 +50,51 @@ jobs:
       - uses: r-lib/setup-rig@v1
         with:
           r-version: ${{ matrix.config.r }}
-          extra-packages: rcmdcheck
-          needs: check
+      - run: rig pkg install --no-install-self --dev . rcmdcheck
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
 ```
 
-setup-rig does not install pandoc or Quarto; use
-`r-lib/actions/setup-pandoc` and `quarto-dev/quarto-actions/setup` for those.
+## Installing packages
 
-## Dependencies
+setup-rig does not install packages. Use rig in a step after it:
 
-With the default `install-dependencies: auto`, setup-rig looks at
-`working-directory`:
+- dependencies of a package, including `Suggests`:
+  `rig pkg install --no-install-self --dev .`
+- a rig project: `rig proj sync`; `rig proj sync --locked` to fail if
+  `rproj.lock` is out of date; `rig proj lock --upgrade && rig proj sync`
+  to check against the newest versions of the dependencies.
+- other packages: `rig pkg install rcmdcheck r-lib/cli`.
 
-- If there is an `rproj.toml`, it runs `rig proj sync`. With `upgrade: true`
-  it runs `rig proj lock --upgrade` first, so you check against the newest
-  versions of your dependencies, not the ones in `rproj.lock`. With
-  `locked: true` it fails if `rproj.lock` is out of date.
-- Otherwise, if there is a `DESCRIPTION`, it runs
-  `rig pkg install --no-install-self --dev .`, which installs the
-  dependencies of the package, including `Suggests`.
-- Otherwise it installs nothing.
+Other things you may need:
 
-`extra-packages` are always installed. Use `install-dependencies: false` for
-jobs that do not need packages.
+- Rtools on Windows: `rig rtools add`.
+- More repositories: `rig repos enable bioconductor`.
+- pak: `rig system add-pak`.
+- Tools for `R CMD check --as-cran`: e.g. `sudo apt-get install qpdf` or
+  `brew install qpdf`.
+- pandoc and Quarto: `r-lib/actions/setup-pandoc`,
+  `quarto-dev/quarto-actions/setup`.
 
-### Passing options to rig
-
-`prefer-binary`, `exclude-newer` and `sysreqs` set rig's `RIG_PREFER_BINARY`,
-`RIG_EXCLUDE_NEWER` and `RIG_SYSREQS` environment variables, so they apply to
-the action and to rig commands in later steps. `prefer-binary` is on by
-default; set it to `false` to always get the newest version of a package,
-even if it has to be compiled.
-
-For anything else, `lock-args`, `sync-args` and `install-args` are added to
-the `rig proj lock`, `rig proj sync` and `rig pkg install` commands.
+rig reads its settings from environment variables, set them for the job to
+change them, e.g. `RIG_PREFER_BINARY`, `RIG_EXCLUDE_NEWER`, `RIG_SYSREQS`.
+See `rig config --help`.
 
 ## Caching
 
 setup-rig caches rig's cache directory (`RIG_CACHE_DIR`), not the package
-library. rig keeps the packages it compiled there, keyed by platform, R
-version and the versions they were built against, so installing from the
-cache only unpacks them, and an older cache is always safe to use.
+library. The main step restores it, rig commands in later steps use it and
+add to it, and the post step saves it. rig keeps the packages it compiled
+there, keyed by platform, R version and the versions they were built
+against, so installing from the cache only unpacks them, and an older cache
+is always safe to use.
 
-The cache key has the platform, the R minor version, and a hash of the files
-in `cache-dependency-glob`. If the installed versions can change without
-these files changing (a `DESCRIPTION`, `upgrade: true`, no `rproj.lock`,
-R-devel) the key also has the week, so the cache is refreshed weekly.
+The cache key has the platform, the R minor version, a hash of the files in
+`cache-dependency-glob`, and the week, so that the cache is updated at
+least weekly even if those files do not change. A new key falls back to the
+caches of earlier weeks.
 
 By default the cache is only saved on the default branch (`save-cache:
 auto`). Pull requests restore it, but do not save their own, which keeps
@@ -119,30 +112,12 @@ credentials in an earlier step if you need them, e.g.
 
 ## Inputs
 
-See [`action.yml`](action.yml) for all inputs and their defaults.
-
 | input | default | |
 |---|---|---|
 | `rig-version` | `latest` | rig version |
 | `r-version` | | R version; empty means `rproj.lock`, then `renv.lock`, then `release` |
 | `r-arch` | | macOS / Windows architecture of R |
-| `rtools` | `auto` | Windows: `auto`, `none` or a version, e.g. `45` |
-| `pak` | `false` | install pak: `false`, `true`, `stable`, `devel` |
-| `working-directory` | `.` | where the package or project is |
-| `install-dependencies` | `auto` | `auto`, `true`, `false` |
-| `dev-dependencies` | `true` | also install `Suggests` / the `dev` group |
-| `needs` | | `Config/Needs/*` groups to install |
-| `extra-packages` | | more packages to install |
-| `locked` | `false` | `rig proj sync --locked` |
-| `upgrade` | `false` | `rig proj lock --upgrade` before syncing |
-| `repositories` | | repositories to enable: names, URLs or `name=URL` |
-| `use-p3m` | `true` | use Posit Public Package Manager |
-| `prefer-binary` | `true` | `RIG_PREFER_BINARY` |
-| `exclude-newer` | | `RIG_EXCLUDE_NEWER` |
-| `sysreqs` | `true` | `RIG_SYSREQS` |
-| `lock-args`, `sync-args`, `install-args` | | extra rig arguments |
-| `check-tools` | `auto` | qpdf, ghostscript, checkbashisms, only if needed |
-| `macos-fortran` | `auto` | Fortran on macOS, if the package has Fortran code |
+| `working-directory` | `.` | where the lock files are, base of the cache globs |
 | `enable-cache` | `auto` | on for GitHub-hosted runners |
 | `cache-dependency-glob` | `DESCRIPTION`, `rproj.*`, lock files | files in the cache key |
 | `cache-suffix` | | extra cache key part |
@@ -157,5 +132,5 @@ See [`action.yml`](action.yml) for all inputs and their defaults.
 ## Environment
 
 setup-rig sets these for later steps, unless they are already set:
-`RIG_MODE=user`, `RIG_CACHE_DIR`, `RIG_PREFER_BINARY`, `RIG_EXCLUDE_NEWER`,
-`RIG_SYSREQS`, `NOT_CRAN=true`, `TZ=UTC`, `_R_CHECK_SYSTEM_CLOCK_=FALSE`.
+`RIG_MODE=user`, `RIG_CACHE_DIR`, `RIG_PREFER_BINARY=true`,
+`NOT_CRAN=true`, `TZ=UTC`, `_R_CHECK_SYSTEM_CLOCK_=FALSE`.

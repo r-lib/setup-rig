@@ -2,7 +2,7 @@
   "name": "setup-rig",
   "version": "0.1.0",
   "private": true,
-  "description": "GitHub Action to install rig, R and R package dependencies",
+  "description": "GitHub Action to install rig and R",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -22,9 +22,7 @@
     "@actions/core": "^3.0.1",
     "@actions/exec": "^3.0.0",
     "@actions/glob": "^0.7.0",
-    "@actions/io": "^3.0.2",
-    "@actions/tool-cache": "^4.0.0",
-    "string-argv": "^0.4.0"
+    "@actions/tool-cache": "^4.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.7",

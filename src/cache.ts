@@ -43,23 +43,25 @@ export interface KeyParts {
   /** R-devel and R-next change all the time. */
   rDevel: boolean;
   filesHash: string;
-  unpinned: boolean;
   suffix: string;
   now?: Date;
 }
 
-/** The primary key, and the restore keys, most specific first. */
+/**
+ * The primary key, and the restore keys, most specific first.
+ *
+ * The key always has the week. The action does not know which packages the
+ * workflow installs, or whether their versions are pinned, so the files
+ * in `cache-dependency-glob` may stay the same while new packages are
+ * built. Without the week the next run would hit the same key exactly, and
+ * never save them. The restore keys fall back to earlier weeks.
+ */
 export function cacheKeys(p: KeyParts): { key: string; restoreKeys: string[] } {
   const minor = p.rVersion.split(".").slice(0, 2).join(".");
-  const base = `${KEY_PREFIX}-${p.platform}-r${minor}${p.rDevel ? "-devel" : ""}`;
   const suffix = p.suffix !== "" ? `-${p.suffix}` : "";
-  const week = p.unpinned || p.rDevel ? `-${isoWeek(p.now ?? new Date())}` : "";
-  const key = `${base}-${p.filesHash}${week}${suffix}`;
-  const restoreKeys = [
-    ...(week !== "" ? [`${base}-${p.filesHash}-`] : []),
-    `${base}-`,
-  ];
-  return { key, restoreKeys };
+  const base = `${KEY_PREFIX}-${p.platform}-r${minor}${p.rDevel ? "-devel" : ""}${suffix}`;
+  const key = `${base}-${p.filesHash}-${isoWeek(p.now ?? new Date())}`;
+  return { key, restoreKeys: [`${base}-${p.filesHash}-`, `${base}-`] };
 }
 
 /** sha256 of the files matching the globs, relative to `dir`. */

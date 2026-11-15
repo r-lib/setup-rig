@@ -7,15 +7,9 @@ import {
   isoWeek,
   shouldSave,
 } from "../src/cache.js";
-import { dependencyCommands, isUnpinned } from "../src/deps.js";
-import { type Inputs, parseInputs, parseList } from "../src/inputs.js";
-import {
-  detectProject,
-  lockRVersion,
-  needsPackages,
-  parseDcf,
-} from "../src/project.js";
-import { rAddArgs, repoCommand, rtoolsArgs } from "../src/r-install.js";
+import { type Inputs, parseInputs } from "../src/inputs.js";
+import { lockRVersion, resolveRSpec } from "../src/project.js";
+import { rAddArgs } from "../src/r-install.js";
 import type { CacheInfo } from "../src/rig.js";
 import {
   findChecksum,
@@ -23,7 +17,6 @@ import {
   rigAssetName,
   rigAssetUrl,
 } from "../src/rig-install.js";
-import { wantedTools } from "../src/tools.js";
 
 const fixtures = path.join(import.meta.dirname, "fixtures");
 
@@ -35,27 +28,20 @@ describe("inputs", () => {
   it("has defaults", () => {
     const i = inputs();
     expect(i.rigVersion).toBe("latest");
-    expect(i.installDependencies).toBe("auto");
-    expect(i.devDependencies).toBe(true);
-    expect(i.pak).toBe("false");
+    expect(i.rVersion).toBe("");
+    expect(i.workingDirectory).toBe(".");
+    expect(i.enableCache).toBe("auto");
     expect(i.saveCache).toBe("auto");
-    expect(i.useP3m).toBe(true);
+    expect(i.pruneCache).toBe(true);
   });
-  it("splits lists and args", () => {
-    expect(parseList("a, b\nc,,")).toEqual(["a", "b", "c"]);
-    const i = inputs({
-      "install-args": `--prefer-binary=5 --exclude-newer "7 days"`,
-    });
-    expect(i.installArgs).toEqual([
-      "--prefer-binary=5",
-      "--exclude-newer",
-      "7 days",
-    ]);
+  it("splits globs on lines", () => {
+    expect(
+      inputs({ "cache-dependency-glob": "a\n b \n\n" }).cacheDependencyGlob,
+    ).toEqual(["a", "b"]);
   });
   it("rejects bad values", () => {
     expect(() => inputs({ "save-cache": "always" })).toThrow(/save-cache/);
-    expect(() => inputs({ locked: "true", upgrade: "true" })).toThrow(/locked/);
-    expect(() => inputs({ pak: "maybe" })).toThrow(/pak/);
+    expect(() => inputs({ "prune-cache": "maybe" })).toThrow(/prune-cache/);
   });
 });
 
@@ -96,137 +82,31 @@ describe("rig download", () => {
   });
 });
 
-describe("project", () => {
-  it("parses DESCRIPTION and Config/Needs", () => {
-    const p = detectProject(path.join(fixtures, "pkg"));
-    expect(p.kind).toBe("pkg");
-    expect(needsPackages(p.description, ["website", "check"])).toEqual([
-      "pkgdown",
-      "tidyverse/tidytemplate",
-      "rcmdcheck",
-    ]);
-    expect(parseDcf("A: 1\nB: x,\n  y\n").B).toBe("x,\ny");
-  });
-  it("detects rig projects", () => {
-    const p = detectProject(path.join(fixtures, "proj"));
-    expect(p.kind).toBe("proj");
-    expect(p.hasLock).toBe(false);
-    expect(detectProject(fixtures).kind).toBe("none");
-  });
+describe("R version", () => {
   it("reads the R version of rproj.lock", () => {
     const lock = `version = 5\n[[targets]]\nr_version = "4.5.2"\n[[targets]]\nr_version = "4.10.0"\n`;
     expect(lockRVersion(lock)).toBe("4.10.0");
     expect(lockRVersion("version = 5\n")).toBeUndefined();
   });
-});
-
-describe("dependency commands", () => {
-  const pkg = detectProject(path.join(fixtures, "pkg"));
-  const proj = detectProject(path.join(fixtures, "proj"));
-  const none = detectProject(fixtures);
-
-  it("installs package dependencies", () => {
-    const i = inputs({
-      "extra-packages": "rcmdcheck",
-      "install-args": "--no-cache",
-    });
-    expect(dependencyCommands(i, pkg, ["pkgdown"])).toEqual([
-      [
-        "pkg",
-        "install",
-        "--no-install-self",
-        "--dev",
-        ".",
-        "pkgdown",
-        "rcmdcheck",
-        "--no-cache",
-      ],
-    ]);
+  it("resolves the spec", () => {
+    expect(resolveRSpec("devel", fixtures)).toBe("devel");
+    expect(resolveRSpec("", path.join(fixtures, "pkg"))).toBe("release");
   });
-  it("syncs projects, with upgrade", () => {
-    const i = inputs({
-      upgrade: "true",
-      "dev-dependencies": "false",
-      needs: "website",
-      repositories: "bioconductor",
-      "extra-packages": "rcmdcheck",
-    });
-    expect(dependencyCommands(i, proj, [])).toEqual([
-      ["proj", "lock", "--upgrade", "--with-repos=bioconductor"],
-      [
-        "proj",
-        "sync",
-        "--no-dev",
-        "--group",
-        "website",
-        "--with-repos=bioconductor",
-      ],
-      ["pkg", "install", "rcmdcheck"],
-    ]);
-  });
-  it("only installs extra packages without a project", () => {
-    expect(dependencyCommands(inputs(), none, [])).toEqual([]);
-    expect(
-      dependencyCommands(inputs({ "extra-packages": "cli" }), none, []),
-    ).toEqual([["pkg", "install", "cli"]]);
-    expect(() =>
-      dependencyCommands(inputs({ "install-dependencies": "true" }), none, []),
-    ).toThrow();
-    expect(
-      dependencyCommands(inputs({ "install-dependencies": "false" }), pkg, []),
-    ).toEqual([]);
-  });
-  it("knows when versions are not pinned", () => {
-    expect(isUnpinned(inputs(), pkg)).toBe(true);
-    expect(isUnpinned(inputs(), proj)).toBe(true);
-    expect(isUnpinned(inputs(), { ...proj, hasLock: true })).toBe(false);
-    expect(
-      isUnpinned(inputs({ upgrade: "true" }), { ...proj, hasLock: true }),
-    ).toBe(true);
-    expect(isUnpinned(inputs(), none)).toBe(false);
-  });
-});
-
-describe("R installation", () => {
   it("builds rig add arguments", () => {
-    expect(rAddArgs("release", inputs())).toEqual([
+    expect(rAddArgs("release", "")).toEqual([
       "add",
       "release",
       "--without-path",
       "--without-pak",
     ]);
-    expect(
-      rAddArgs("4.5", inputs({ pak: "devel", "r-arch": "x86_64" })),
-    ).toEqual([
+    expect(rAddArgs("4.5", "x86_64")).toEqual([
       "add",
       "4.5",
       "--without-path",
+      "--without-pak",
       "--arch",
       "x86_64",
-      "--pak-version",
-      "devel",
     ]);
-  });
-  it("handles rtools and repositories", () => {
-    expect(rtoolsArgs("auto")).toEqual(["add", "rtools"]);
-    expect(rtoolsArgs("none")).toBeUndefined();
-    expect(rtoolsArgs("45")).toEqual(["add", "rtools45"]);
-    expect(repoCommand("bioconductor")).toEqual([
-      "repos",
-      "enable",
-      "bioconductor",
-    ]);
-    expect(repoCommand("rlib=https://r-lib.r-universe.dev")).toEqual([
-      "repos",
-      "add",
-      "rlib",
-      "https://r-lib.r-universe.dev",
-      "--enable",
-      "--force",
-    ]);
-    expect(repoCommand("https://r-lib.r-universe.dev/")[2]).toBe(
-      "r-lib.r-universe.dev",
-    );
   });
 });
 
@@ -255,27 +135,25 @@ describe("cache", () => {
   });
   it("composes keys", () => {
     const now = new Date("2026-11-15T12:00:00Z");
+    const p = "x86_64-unknown-linux-gnu-ubuntu-24.04";
     const base = {
-      platform: "x86_64-unknown-linux-gnu-ubuntu-24.04",
+      platform: p,
       rVersion: "4.6.1",
       rDevel: false,
       filesHash: "abc",
       suffix: "",
       now,
     };
-    expect(cacheKeys({ ...base, unpinned: false })).toEqual({
-      key: "setup-rig-v1-x86_64-unknown-linux-gnu-ubuntu-24.04-r4.6-abc",
-      restoreKeys: ["setup-rig-v1-x86_64-unknown-linux-gnu-ubuntu-24.04-r4.6-"],
+    expect(cacheKeys(base)).toEqual({
+      key: `setup-rig-v1-${p}-r4.6-abc-2026w46`,
+      restoreKeys: [`setup-rig-v1-${p}-r4.6-abc-`, `setup-rig-v1-${p}-r4.6-`],
     });
-    expect(cacheKeys({ ...base, unpinned: true, suffix: "x" })).toEqual({
-      key: "setup-rig-v1-x86_64-unknown-linux-gnu-ubuntu-24.04-r4.6-abc-2026w46-x",
-      restoreKeys: [
-        "setup-rig-v1-x86_64-unknown-linux-gnu-ubuntu-24.04-r4.6-abc-",
-        "setup-rig-v1-x86_64-unknown-linux-gnu-ubuntu-24.04-r4.6-",
-      ],
-    });
-    expect(cacheKeys({ ...base, rDevel: true, unpinned: false }).key).toBe(
-      "setup-rig-v1-x86_64-unknown-linux-gnu-ubuntu-24.04-r4.6-devel-abc-2026w46",
+    expect(cacheKeys({ ...base, suffix: "x" }).restoreKeys).toEqual([
+      `setup-rig-v1-${p}-r4.6-x-abc-`,
+      `setup-rig-v1-${p}-r4.6-x-`,
+    ]);
+    expect(cacheKeys({ ...base, rDevel: true }).key).toBe(
+      `setup-rig-v1-${p}-r4.6-devel-abc-2026w46`,
     );
   });
   it("saves only on the default branch by default", () => {
@@ -303,17 +181,5 @@ describe("cache", () => {
     expect(cacheChanged(info(1, 5), info(1, 9), true)).toBe(false);
     expect(cacheChanged(info(1, 5), info(1, 9), false)).toBe(true);
     expect(cacheChanged(info(1, 5), info(2, 5), true)).toBe(true);
-  });
-});
-
-describe("check tools", () => {
-  it("picks tools from the package", () => {
-    expect(wantedTools("auto", path.join(fixtures, "pkg"))).toEqual([]);
-    expect(wantedTools("true", fixtures)).toEqual([
-      "qpdf",
-      "ghostscript",
-      "checkbashisms",
-    ]);
-    expect(wantedTools("false", fixtures)).toEqual([]);
   });
 });

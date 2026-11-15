@@ -1079,14 +1079,14 @@ var require_util = __commonJS({
         }
         const port = url2.port != null ? url2.port : url2.protocol === "https:" ? 443 : 80;
         let origin = url2.origin != null ? url2.origin : `${url2.protocol || ""}//${url2.hostname || ""}:${port}`;
-        let path20 = url2.path != null ? url2.path : `${url2.pathname || ""}${url2.search || ""}`;
+        let path19 = url2.path != null ? url2.path : `${url2.pathname || ""}${url2.search || ""}`;
         if (origin[origin.length - 1] === "/") {
           origin = origin.slice(0, origin.length - 1);
         }
-        if (path20 && path20[0] !== "/") {
-          path20 = `/${path20}`;
+        if (path19 && path19[0] !== "/") {
+          path19 = `/${path19}`;
         }
-        return new URL(`${origin}${path20}`);
+        return new URL(`${origin}${path19}`);
       }
       if (!isHttpOrHttpsPrefixed(url2.origin || url2.protocol)) {
         throw new InvalidArgumentError("Invalid URL protocol: the URL must start with `http:` or `https:`.");
@@ -1537,39 +1537,39 @@ var require_diagnostics = __commonJS({
       });
       diagnosticsChannel.channel("undici:client:sendHeaders").subscribe((evt) => {
         const {
-          request: { method, path: path20, origin }
+          request: { method, path: path19, origin }
         } = evt;
-        debuglog("sending request to %s %s/%s", method, origin, path20);
+        debuglog("sending request to %s %s/%s", method, origin, path19);
       });
       diagnosticsChannel.channel("undici:request:headers").subscribe((evt) => {
         const {
-          request: { method, path: path20, origin },
+          request: { method, path: path19, origin },
           response: { statusCode }
         } = evt;
         debuglog(
           "received response to %s %s/%s - HTTP %d",
           method,
           origin,
-          path20,
+          path19,
           statusCode
         );
       });
       diagnosticsChannel.channel("undici:request:trailers").subscribe((evt) => {
         const {
-          request: { method, path: path20, origin }
+          request: { method, path: path19, origin }
         } = evt;
-        debuglog("trailers received from %s %s/%s", method, origin, path20);
+        debuglog("trailers received from %s %s/%s", method, origin, path19);
       });
       diagnosticsChannel.channel("undici:request:error").subscribe((evt) => {
         const {
-          request: { method, path: path20, origin },
+          request: { method, path: path19, origin },
           error: error2
         } = evt;
         debuglog(
           "request to %s %s/%s errored - %s",
           method,
           origin,
-          path20,
+          path19,
           error2.message
         );
       });
@@ -1618,9 +1618,9 @@ var require_diagnostics = __commonJS({
         });
         diagnosticsChannel.channel("undici:client:sendHeaders").subscribe((evt) => {
           const {
-            request: { method, path: path20, origin }
+            request: { method, path: path19, origin }
           } = evt;
-          debuglog("sending request to %s %s/%s", method, origin, path20);
+          debuglog("sending request to %s %s/%s", method, origin, path19);
         });
       }
       diagnosticsChannel.channel("undici:websocket:open").subscribe((evt) => {
@@ -1683,7 +1683,7 @@ var require_request = __commonJS({
     var kHandler = /* @__PURE__ */ Symbol("handler");
     var Request = class {
       constructor(origin, {
-        path: path20,
+        path: path19,
         method,
         body: body2,
         headers,
@@ -1698,11 +1698,11 @@ var require_request = __commonJS({
         expectContinue,
         servername
       }, handler) {
-        if (typeof path20 !== "string") {
+        if (typeof path19 !== "string") {
           throw new InvalidArgumentError("path must be a string");
-        } else if (path20[0] !== "/" && !(path20.startsWith("http://") || path20.startsWith("https://")) && method !== "CONNECT") {
+        } else if (path19[0] !== "/" && !(path19.startsWith("http://") || path19.startsWith("https://")) && method !== "CONNECT") {
           throw new InvalidArgumentError("path must be an absolute URL or start with a slash");
-        } else if (invalidPathRegex.test(path20)) {
+        } else if (invalidPathRegex.test(path19)) {
           throw new InvalidArgumentError("invalid request path");
         }
         if (typeof method !== "string") {
@@ -1768,7 +1768,7 @@ var require_request = __commonJS({
         this.completed = false;
         this.aborted = false;
         this.upgrade = upgrade || null;
-        this.path = query ? buildURL(path20, query) : path20;
+        this.path = query ? buildURL(path19, query) : path19;
         this.origin = origin;
         this.idempotent = idempotent == null ? method === "HEAD" || method === "GET" : idempotent;
         this.blocking = blocking == null ? false : blocking;
@@ -6461,7 +6461,7 @@ var require_client_h1 = __commonJS({
       return method !== "GET" && method !== "HEAD" && method !== "OPTIONS" && method !== "TRACE" && method !== "CONNECT";
     }
     function writeH1(client, request) {
-      const { method, path: path20, host, upgrade, blocking, reset } = request;
+      const { method, path: path19, host, upgrade, blocking, reset } = request;
       let { body: body2, headers, contentLength: contentLength2 } = request;
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH" || method === "QUERY" || method === "PROPFIND" || method === "PROPPATCH";
       if (util6.isFormDataLike(body2)) {
@@ -6542,7 +6542,7 @@ var require_client_h1 = __commonJS({
       if (blocking) {
         socket[kBlocking] = true;
       }
-      let header = `${method} ${path20} HTTP/1.1\r
+      let header = `${method} ${path19} HTTP/1.1\r
 `;
       if (typeof host === "string") {
         header += `host: ${host}\r
@@ -7071,7 +7071,7 @@ var require_client_h2 = __commonJS({
     }
     function writeH2(client, request) {
       const session = client[kHTTP2Session];
-      const { method, path: path20, host, upgrade, expectContinue, signal, headers: reqHeaders } = request;
+      const { method, path: path19, host, upgrade, expectContinue, signal, headers: reqHeaders } = request;
       let { body: body2 } = request;
       if (upgrade) {
         util6.errorRequest(client, request, new Error("Upgrade not supported for H2"));
@@ -7168,7 +7168,7 @@ var require_client_h2 = __commonJS({
         });
         return true;
       }
-      headers[HTTP2_HEADER_PATH] = path20;
+      headers[HTTP2_HEADER_PATH] = path19;
       headers[HTTP2_HEADER_SCHEME] = "https";
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH";
       if (body2 && typeof body2.read === "function") {
@@ -7521,9 +7521,9 @@ var require_redirect_handler = __commonJS({
           return this.handler.onHeaders(statusCode, headers, resume2, statusText);
         }
         const { origin, pathname, search } = util6.parseURL(new URL(this.location, this.opts.origin && new URL(this.opts.path, this.opts.origin)));
-        const path20 = search ? `${pathname}${search}` : pathname;
+        const path19 = search ? `${pathname}${search}` : pathname;
         this.opts.headers = cleanRequestHeaders(this.opts.headers, statusCode === 303, this.opts.origin !== origin);
-        this.opts.path = path20;
+        this.opts.path = path19;
         this.opts.origin = origin;
         this.opts.maxRedirections = 0;
         this.opts.query = null;
@@ -8762,10 +8762,10 @@ var require_proxy_agent = __commonJS({
         };
         const {
           origin,
-          path: path20 = "/",
+          path: path19 = "/",
           headers = {}
         } = opts;
-        opts.path = origin + path20;
+        opts.path = origin + path19;
         if (!("host" in headers) && !("Host" in headers)) {
           const { host } = new URL5(origin);
           headers.host = host;
@@ -10737,20 +10737,20 @@ var require_mock_utils = __commonJS({
       }
       return true;
     }
-    function safeUrl(path20) {
-      if (typeof path20 !== "string") {
-        return path20;
+    function safeUrl(path19) {
+      if (typeof path19 !== "string") {
+        return path19;
       }
-      const pathSegments = path20.split("?");
+      const pathSegments = path19.split("?");
       if (pathSegments.length !== 2) {
-        return path20;
+        return path19;
       }
       const qp = new URLSearchParams(pathSegments.pop());
       qp.sort();
       return [...pathSegments, qp.toString()].join("?");
     }
-    function matchKey(mockDispatch2, { path: path20, method, body: body2, headers }) {
-      const pathMatch = matchValue(mockDispatch2.path, path20);
+    function matchKey(mockDispatch2, { path: path19, method, body: body2, headers }) {
+      const pathMatch = matchValue(mockDispatch2.path, path19);
       const methodMatch = matchValue(mockDispatch2.method, method);
       const bodyMatch = typeof mockDispatch2.body !== "undefined" ? matchValue(mockDispatch2.body, body2) : true;
       const headersMatch = matchHeaders(mockDispatch2, headers);
@@ -10772,7 +10772,7 @@ var require_mock_utils = __commonJS({
     function getMockDispatch(mockDispatches, key) {
       const basePath = key.query ? buildURL(key.path, key.query) : key.path;
       const resolvedPath = typeof basePath === "string" ? safeUrl(basePath) : basePath;
-      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path20 }) => matchValue(safeUrl(path20), resolvedPath));
+      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path19 }) => matchValue(safeUrl(path19), resolvedPath));
       if (matchedMockDispatches.length === 0) {
         throw new MockNotMatchedError(`Mock dispatch not matched for path '${resolvedPath}'`);
       }
@@ -10810,9 +10810,9 @@ var require_mock_utils = __commonJS({
       }
     }
     function buildKey(opts) {
-      const { path: path20, method, body: body2, headers, query } = opts;
+      const { path: path19, method, body: body2, headers, query } = opts;
       return {
-        path: path20,
+        path: path19,
         method,
         body: body2,
         headers,
@@ -11275,10 +11275,10 @@ var require_pending_interceptors_formatter = __commonJS({
       }
       format(pendingInterceptors) {
         const withPrettyHeaders = pendingInterceptors.map(
-          ({ method, path: path20, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
+          ({ method, path: path19, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
             Method: method,
             Origin: origin,
-            Path: path20,
+            Path: path19,
             "Status code": statusCode,
             Persistent: persist ? PERSISTENT : NOT_PERSISTENT,
             Invocations: timesInvoked,
@@ -16157,9 +16157,9 @@ var require_util6 = __commonJS({
         }
       }
     }
-    function validateCookiePath(path20) {
-      for (let i = 0; i < path20.length; ++i) {
-        const code = path20.charCodeAt(i);
+    function validateCookiePath(path19) {
+      for (let i = 0; i < path19.length; ++i) {
+        const code = path19.charCodeAt(i);
         if (code < 32 || // exclude CTLs (0-31)
         code > 126 || // exclude DEL and non-ascii
         code === 59) {
@@ -19079,11 +19079,11 @@ var require_undici = __commonJS({
           if (typeof opts.path !== "string") {
             throw new InvalidArgumentError("invalid opts.path");
           }
-          let path20 = opts.path;
+          let path19 = opts.path;
           if (!opts.path.startsWith("/")) {
-            path20 = `/${path20}`;
+            path19 = `/${path19}`;
           }
-          url2 = new URL(util6.parseOrigin(url2).origin + path20);
+          url2 = new URL(util6.parseOrigin(url2).origin + path19);
         } else {
           if (!opts) {
             opts = typeof url2 === "object" ? url2 : {};
@@ -26346,7 +26346,7 @@ var require_commonjs2 = __commonJS({
 });
 
 // src/setup.ts
-import * as path19 from "node:path";
+import * as path18 from "node:path";
 import { fileURLToPath } from "node:url";
 
 // node_modules/@actions/core/lib/command.js
@@ -27569,12 +27569,6 @@ function exists(fsPath) {
     return true;
   });
 }
-function isDirectory(fsPath_1) {
-  return __awaiter4(this, arguments, void 0, function* (fsPath, useStat = false) {
-    const stats = useStat ? yield stat(fsPath) : yield lstat(fsPath);
-    return stats.isDirectory();
-  });
-}
 function isRooted(p) {
   p = normalizeSeparators(p);
   if (!p) {
@@ -27707,26 +27701,6 @@ function cp(source_1, dest_1) {
       }
       yield copyFile2(source, newDest, force);
     }
-  });
-}
-function mv(source_1, dest_1) {
-  return __awaiter5(this, arguments, void 0, function* (source, dest, options = {}) {
-    if (yield exists(dest)) {
-      let destExists = true;
-      if (yield isDirectory(dest)) {
-        dest = path2.join(dest, path2.basename(source));
-        destExists = yield exists(dest);
-      }
-      if (destExists) {
-        if (options.force == null || options.force) {
-          yield rmRF(dest);
-        } else {
-          throw new Error("Destination already exists");
-        }
-      }
-    }
-    yield mkdirP(path2.dirname(dest));
-    yield rename(source, dest);
   });
 }
 function rmRF(inputPath) {
@@ -30894,8 +30868,8 @@ var Pattern = class _Pattern {
 
 // node_modules/@actions/glob/lib/internal-search-state.js
 var SearchState = class {
-  constructor(path20, level) {
-    this.path = path20;
+  constructor(path19, level) {
+    this.path = path19;
     this.level = level;
   }
 };
@@ -36446,15 +36420,15 @@ function getRequestUrl(baseUri, operationSpec, operationArguments, fallbackObjec
   let isAbsolutePath = false;
   let requestUrl = replaceAll(baseUri, urlReplacements);
   if (operationSpec.path) {
-    let path20 = replaceAll(operationSpec.path, urlReplacements);
-    if (operationSpec.path === "/{nextLink}" && path20.startsWith("/")) {
-      path20 = path20.substring(1);
+    let path19 = replaceAll(operationSpec.path, urlReplacements);
+    if (operationSpec.path === "/{nextLink}" && path19.startsWith("/")) {
+      path19 = path19.substring(1);
     }
-    if (isAbsoluteUrl(path20)) {
-      requestUrl = path20;
+    if (isAbsoluteUrl(path19)) {
+      requestUrl = path19;
       isAbsolutePath = true;
     } else {
-      requestUrl = appendPath(requestUrl, path20);
+      requestUrl = appendPath(requestUrl, path19);
     }
   }
   const { queryParams, sequenceParams } = calculateQueryParameters(operationSpec, operationArguments, fallbackObject);
@@ -36500,9 +36474,9 @@ function appendPath(url2, pathToAppend) {
   }
   const searchStart = pathToAppend.indexOf("?");
   if (searchStart !== -1) {
-    const path20 = pathToAppend.substring(0, searchStart);
+    const path19 = pathToAppend.substring(0, searchStart);
     const search = pathToAppend.substring(searchStart + 1);
-    newPath = newPath + path20;
+    newPath = newPath + path19;
     if (search) {
       parsedUrl.search = parsedUrl.search ? `${parsedUrl.search}&${search}` : search;
     }
@@ -39379,16 +39353,16 @@ var MatcherView = class {
    * @returns {string|undefined}
    */
   getCurrentTag() {
-    const path20 = this._matcher.path;
-    return path20.length > 0 ? path20[path20.length - 1].tag : void 0;
+    const path19 = this._matcher.path;
+    return path19.length > 0 ? path19[path19.length - 1].tag : void 0;
   }
   /**
    * Get current namespace.
    * @returns {string|undefined}
    */
   getCurrentNamespace() {
-    const path20 = this._matcher.path;
-    return path20.length > 0 ? path20[path20.length - 1].namespace : void 0;
+    const path19 = this._matcher.path;
+    return path19.length > 0 ? path19[path19.length - 1].namespace : void 0;
   }
   /**
    * Get current node's attribute value.
@@ -39396,9 +39370,9 @@ var MatcherView = class {
    * @returns {*}
    */
   getAttrValue(attrName) {
-    const path20 = this._matcher.path;
-    if (path20.length === 0) return void 0;
-    return path20[path20.length - 1].values?.[attrName];
+    const path19 = this._matcher.path;
+    if (path19.length === 0) return void 0;
+    return path19[path19.length - 1].values?.[attrName];
   }
   /**
    * Check if current node has an attribute.
@@ -39406,9 +39380,9 @@ var MatcherView = class {
    * @returns {boolean}
    */
   hasAttr(attrName) {
-    const path20 = this._matcher.path;
-    if (path20.length === 0) return false;
-    const current = path20[path20.length - 1];
+    const path19 = this._matcher.path;
+    if (path19.length === 0) return false;
+    const current = path19[path19.length - 1];
     return current.values !== void 0 && attrName in current.values;
   }
   /**
@@ -39434,18 +39408,18 @@ var MatcherView = class {
    * @returns {number}
    */
   getPosition() {
-    const path20 = this._matcher.path;
-    if (path20.length === 0) return -1;
-    return path20[path20.length - 1].position ?? 0;
+    const path19 = this._matcher.path;
+    if (path19.length === 0) return -1;
+    return path19[path19.length - 1].position ?? 0;
   }
   /**
    * Get current node's repeat counter (occurrence count of this tag name).
    * @returns {number}
    */
   getCounter() {
-    const path20 = this._matcher.path;
-    if (path20.length === 0) return -1;
-    return path20[path20.length - 1].counter ?? 0;
+    const path19 = this._matcher.path;
+    if (path19.length === 0) return -1;
+    return path19[path19.length - 1].counter ?? 0;
   }
   /**
    * Get current node's sibling index (alias for getPosition).
@@ -42695,11 +42669,11 @@ var NativeCRC64 = (() => {
       throw new Error("Module.ENVIRONMENT has been deprecated. To force the environment, use the ENVIRONMENT compile-time option (for example, -sENVIRONMENT=web or -sENVIRONMENT=node)");
     }
     var scriptDirectory = "";
-    function locateFile(path20) {
+    function locateFile(path19) {
       if (Module["locateFile"]) {
-        return Module["locateFile"](path20, scriptDirectory);
+        return Module["locateFile"](path19, scriptDirectory);
       }
-      return scriptDirectory + path20;
+      return scriptDirectory + path19;
     }
     var read_, readAsync, readBinary, setWindowTitle;
     function logExceptionOnExit(e) {
@@ -45752,9 +45726,9 @@ var StorageSharedKeyCredentialPolicy = class extends CredentialPolicy {
    * @param request -
    */
   getCanonicalizedResourceString(request) {
-    const path20 = getURLPath(request.url) || "/";
+    const path19 = getURLPath(request.url) || "/";
     let canonicalizedResourceString = "";
-    canonicalizedResourceString += `/${this.factory.accountName}${path20}`;
+    canonicalizedResourceString += `/${this.factory.accountName}${path19}`;
     const queries = getURLQueries(request.url);
     const lowercaseQueries = {};
     if (queries) {
@@ -46236,9 +46210,9 @@ function storageSharedKeyCredentialPolicy(options) {
     return canonicalizedHeadersStringToSign;
   }
   function getCanonicalizedResourceString(request) {
-    const path20 = getURLPath(request.url) || "/";
+    const path19 = getURLPath(request.url) || "/";
     let canonicalizedResourceString = "";
-    canonicalizedResourceString += `/${options.accountName}${path20}`;
+    canonicalizedResourceString += `/${options.accountName}${path19}`;
     const queries = getURLQueries(request.url);
     const lowercaseQueries = {};
     if (queries) {
@@ -60182,10 +60156,10 @@ var StorageContextClient = class extends StorageClient {
 // node_modules/@azure/storage-blob/dist/esm/utils/utils.common.js
 function escapeURLPath(url2) {
   const urlParsed = new URL(url2);
-  let path20 = urlParsed.pathname;
-  path20 = path20 || "/";
-  path20 = escape2(path20);
-  urlParsed.pathname = path20;
+  let path19 = urlParsed.pathname;
+  path19 = path19 || "/";
+  path19 = escape2(path19);
+  urlParsed.pathname = path19;
   return urlParsed.toString();
 }
 function getProxyUriFromDevConnString(connectionString) {
@@ -60270,9 +60244,9 @@ function escape2(text) {
 }
 function appendToURLPath(url2, name) {
   const urlParsed = new URL(url2);
-  let path20 = urlParsed.pathname;
-  path20 = path20 ? path20.endsWith("/") ? `${path20}${name}` : `${path20}/${name}` : name;
-  urlParsed.pathname = path20;
+  let path19 = urlParsed.pathname;
+  path19 = path19 ? path19.endsWith("/") ? `${path19}${name}` : `${path19}/${name}` : name;
+  urlParsed.pathname = path19;
   return urlParsed.toString();
 }
 function setURLParameter2(url2, name, value) {
@@ -68829,15 +68803,10 @@ function isoWeek(date) {
 }
 function cacheKeys(p) {
   const minor = p.rVersion.split(".").slice(0, 2).join(".");
-  const base = `${KEY_PREFIX}-${p.platform}-r${minor}${p.rDevel ? "-devel" : ""}`;
   const suffix = p.suffix !== "" ? `-${p.suffix}` : "";
-  const week = p.unpinned || p.rDevel ? `-${isoWeek(p.now ?? /* @__PURE__ */ new Date())}` : "";
-  const key = `${base}-${p.filesHash}${week}${suffix}`;
-  const restoreKeys = [
-    ...week !== "" ? [`${base}-${p.filesHash}-`] : [],
-    `${base}-`
-  ];
-  return { key, restoreKeys };
+  const base = `${KEY_PREFIX}-${p.platform}-r${minor}${p.rDevel ? "-devel" : ""}${suffix}`;
+  const key = `${base}-${p.filesHash}-${isoWeek(p.now ?? /* @__PURE__ */ new Date())}`;
+  return { key, restoreKeys: [`${base}-${p.filesHash}-`, `${base}-`] };
 }
 async function hashFiles2(globs, dir) {
   const patterns = globs.map((g) => path13.isAbsolute(g) ? g : path13.join(dir, g)).join("\n");
@@ -68867,233 +68836,40 @@ async function restore(dir, key, restoreKeys) {
   }
 }
 
-// src/deps.ts
-function dependencyCommands(inputs, project, needsPkgs) {
-  const mode = inputs.installDependencies;
-  const extra = inputs.extraPackages;
-  const install = (pkgs) => [
-    "pkg",
-    "install",
-    ...pkgs,
-    ...inputs.installArgs
-  ];
-  if (mode === "true" && project.kind === "none") {
-    throw new Error(
-      `install-dependencies is true, but there is no rproj.toml or DESCRIPTION in ${project.dir}.`
-    );
-  }
-  const cmds = [];
-  const kind = mode === "false" ? "none" : project.kind;
-  if (kind === "proj") {
-    const withRepos = inputs.repositories.length > 0 ? [`--with-repos=${inputs.repositories.join(",")}`] : [];
-    if (inputs.upgrade) {
-      cmds.push([
-        "proj",
-        "lock",
-        "--upgrade",
-        ...withRepos,
-        ...inputs.lockArgs
-      ]);
-    }
-    cmds.push([
-      "proj",
-      "sync",
-      ...inputs.locked ? ["--locked"] : [],
-      ...inputs.devDependencies ? [] : ["--no-dev"],
-      ...inputs.needs.flatMap((g) => ["--group", g]),
-      ...withRepos,
-      ...inputs.syncArgs
-    ]);
-    if (extra.length > 0) cmds.push(install(extra));
-  } else if (kind === "pkg") {
-    cmds.push([
-      "pkg",
-      "install",
-      "--no-install-self",
-      ...inputs.devDependencies ? ["--dev"] : [],
-      ".",
-      ...needsPkgs,
-      ...extra,
-      ...inputs.installArgs
-    ]);
-  } else if (extra.length > 0) {
-    cmds.push(install(extra));
-  }
-  return cmds;
-}
-function isUnpinned(inputs, project) {
-  if (inputs.installDependencies === "false") {
-    return inputs.extraPackages.length > 0;
-  }
-  if (project.kind === "proj") return inputs.upgrade || !project.hasLock;
-  return project.kind === "pkg" || inputs.extraPackages.length > 0;
-}
-
-// node_modules/string-argv/index.js
-function parseArgsStringToArgv(value, env, file) {
-  const myArray = [];
-  if (env) {
-    myArray.push(env);
-  }
-  if (file) {
-    myArray.push(file);
-  }
-  let current = "";
-  let inQuote = null;
-  let hasToken = false;
-  let i = 0;
-  while (i < value.length) {
-    const char = value[i];
-    if (inQuote) {
-      if (char === inQuote) {
-        inQuote = null;
-      } else {
-        current += char;
-      }
-    } else {
-      if (char === '"' || char === "'") {
-        inQuote = char;
-        hasToken = true;
-      } else if (/\s/.test(char)) {
-        if (hasToken) {
-          myArray.push(current);
-          current = "";
-          hasToken = false;
-        }
-      } else {
-        current += char;
-        hasToken = true;
-      }
-    }
-    i++;
-  }
-  if (hasToken) {
-    myArray.push(current);
-  }
-  return myArray;
-}
-
 // src/inputs.ts
-function parseList(value) {
-  return value.split(/[,\n]/).map((x) => x.trim()).filter((x) => x !== "");
-}
 function parseLines(value) {
   return value.split("\n").map((x) => x.trim()).filter((x) => x !== "");
 }
 function parseBool(name, value) {
   const v = value.trim().toLowerCase();
   if (["true", "yes", "on", "1"].includes(v)) return true;
-  if (["false", "no", "off", "0", ""].includes(v)) return false;
+  if (["false", "no", "off", "0"].includes(v)) return false;
   throw new Error(`Input '${name}' must be true or false, not '${value}'.`);
 }
-function parseChoice(name, value, choices) {
-  const v = value.trim().toLowerCase();
-  if (choices.includes(v)) return v;
+function parseAuto(name, value) {
+  const v = (value.trim() || "auto").toLowerCase();
+  if (v === "auto" || v === "true" || v === "false") return v;
   throw new Error(
-    `Input '${name}' must be one of ${choices.join(", ")}, not '${value}'.`
+    `Input '${name}' must be auto, true or false, not '${value}'.`
   );
 }
-var AUTO = ["auto", "true", "false"];
 function parseInputs(get = getInput) {
-  const inputs = {
+  return {
     rigVersion: get("rig-version").trim() || "latest",
     rVersion: get("r-version").trim(),
     rArch: get("r-arch").trim(),
-    rtools: get("rtools").trim().toLowerCase() || "auto",
-    pak: get("pak").trim().toLowerCase() || "false",
     workingDirectory: get("working-directory").trim() || ".",
-    installDependencies: parseChoice(
-      "install-dependencies",
-      get("install-dependencies") || "auto",
-      AUTO
-    ),
-    devDependencies: parseBool(
-      "dev-dependencies",
-      get("dev-dependencies") || "true"
-    ),
-    needs: parseList(get("needs")),
-    extraPackages: parseList(get("extra-packages")),
-    locked: parseBool("locked", get("locked")),
-    upgrade: parseBool("upgrade", get("upgrade")),
-    repositories: parseList(get("repositories")),
-    useP3m: parseBool("use-p3m", get("use-p3m") || "true"),
-    preferBinary: get("prefer-binary").trim(),
-    excludeNewer: get("exclude-newer").trim(),
-    sysreqs: get("sysreqs").trim(),
-    lockArgs: parseArgsStringToArgv(get("lock-args")),
-    syncArgs: parseArgsStringToArgv(get("sync-args")),
-    installArgs: parseArgsStringToArgv(get("install-args")),
-    checkTools: parseChoice("check-tools", get("check-tools") || "auto", AUTO),
-    macosFortran: parseChoice(
-      "macos-fortran",
-      get("macos-fortran") || "auto",
-      AUTO
-    ),
-    enableCache: parseChoice(
-      "enable-cache",
-      get("enable-cache") || "auto",
-      AUTO
-    ),
+    enableCache: parseAuto("enable-cache", get("enable-cache")),
     cacheDependencyGlob: parseLines(get("cache-dependency-glob")),
     cacheSuffix: get("cache-suffix").trim(),
     pruneCache: parseBool("prune-cache", get("prune-cache") || "true"),
-    saveCache: parseChoice("save-cache", get("save-cache") || "auto", AUTO)
+    saveCache: parseAuto("save-cache", get("save-cache"))
   };
-  if (inputs.locked && inputs.upgrade) {
-    throw new Error("Inputs 'locked' and 'upgrade' cannot both be true.");
-  }
-  if (!["false", "true", "stable", "devel"].includes(inputs.pak)) {
-    throw new Error(
-      `Input 'pak' must be false, true, stable or devel, not '${inputs.pak}'.`
-    );
-  }
-  return inputs;
 }
 
 // src/project.ts
-import { existsSync as existsSync4, readdirSync, readFileSync as readFileSync2 } from "node:fs";
+import { existsSync as existsSync4, readFileSync as readFileSync2 } from "node:fs";
 import * as path14 from "node:path";
-function detectProject(dir) {
-  const has = (f) => existsSync4(path14.join(dir, f));
-  const kind = has("rproj.toml") ? "proj" : has("DESCRIPTION") ? "pkg" : "none";
-  return {
-    dir,
-    kind,
-    hasLock: has("rproj.lock"),
-    hasRenvLock: has("renv.lock"),
-    description: has("DESCRIPTION") ? parseDcf(readFileSync2(path14.join(dir, "DESCRIPTION"), "utf8")) : void 0
-  };
-}
-function parseDcf(text) {
-  const fields = {};
-  let current;
-  for (const line of text.split(/\r?\n/)) {
-    if (/^\s/.test(line) && current) {
-      fields[current] += `
-${line.trim()}`;
-    } else {
-      const m = line.match(/^([^:\s]+):\s*(.*)$/);
-      if (m) {
-        current = m[1];
-        fields[current] = m[2].trim();
-      }
-    }
-  }
-  return fields;
-}
-function needsPackages(description, needs) {
-  if (!description) return [];
-  const out = [];
-  for (const name of needs) {
-    const field = description[`Config/Needs/${name}`];
-    if (field === void 0) continue;
-    for (const entry of field.split(",")) {
-      const ref = entry.replace(/\(.*\)/s, "").trim();
-      if (ref !== "" && !out.includes(ref)) out.push(ref);
-    }
-  }
-  return out;
-}
 function lockRVersion(text) {
   const versions = [...text.matchAll(/^\s*r_version\s*=\s*"([^"]+)"/gm)].map(
     (m) => m[1]
@@ -69110,24 +68886,19 @@ function compareVersions(a, b) {
   }
   return 0;
 }
-function hasVignettes(dir) {
-  if (existsSync4(path14.join(dir, "vignettes"))) return true;
-  const doc = path14.join(dir, "inst", "doc");
-  return existsSync4(doc) && readdirSync(doc).some((f) => f.endsWith(".pdf"));
-}
-function hasConfigure(dir) {
-  return existsSync4(path14.join(dir, "configure"));
-}
-function hasFortran(dir) {
-  const src = path14.join(dir, "src");
-  if (!existsSync4(src)) return false;
-  return readdirSync(src, { recursive: true }).some(
-    (f) => /\.(f|f90|f95|for)$/i.test(String(f))
-  );
+function resolveRSpec(rVersion, dir) {
+  if (rVersion !== "") return rVersion;
+  const lock = path14.join(dir, "rproj.lock");
+  if (existsSync4(lock)) {
+    const v = lockRVersion(readFileSync2(lock, "utf8"));
+    if (v) return v;
+  }
+  const renv = path14.join(dir, "renv.lock");
+  if (existsSync4(renv)) return renv;
+  return "release";
 }
 
 // src/r-install.ts
-import { readFileSync as readFileSync3 } from "node:fs";
 import * as path15 from "node:path";
 
 // src/rig.ts
@@ -69150,31 +68921,15 @@ ${out.stdout}`
 }
 
 // src/r-install.ts
-function resolveRSpec(inputs, project) {
-  if (inputs.rVersion !== "") return inputs.rVersion;
-  if (project.kind === "proj" && project.hasLock) {
-    const v = lockRVersion(
-      readFileSync3(path15.join(project.dir, "rproj.lock"), "utf8")
-    );
-    if (v) return v;
-  }
-  if (project.hasRenvLock) return path15.join(project.dir, "renv.lock");
-  return "release";
-}
-function rAddArgs(spec, inputs) {
-  const args = ["add", spec, "--without-path"];
-  if (inputs.rArch !== "") args.push("--arch", inputs.rArch);
-  if (inputs.pak === "false") {
-    args.push("--without-pak");
-  } else {
-    args.push("--pak-version", inputs.pak === "devel" ? "devel" : "stable");
-  }
+function rAddArgs(spec, arch3) {
+  const args = ["add", spec, "--without-path", "--without-pak"];
+  if (arch3 !== "") args.push("--arch", arch3);
   return args;
 }
-async function installR(spec, inputs) {
+async function installR(spec, arch3) {
   const out = await group(
     `Installing R (${spec})`,
-    () => getExecOutput("rig", [...rAddArgs(spec, inputs), "--json"])
+    () => getExecOutput("rig", [...rAddArgs(spec, arch3), "--json"])
   );
   let r;
   try {
@@ -69187,45 +68942,10 @@ ${out.stdout}`);
   addPath(path15.dirname(r.binary));
   return r;
 }
-function rtoolsArgs(rtools) {
-  if (rtools === "none" || rtools === "false") return void 0;
-  if (rtools === "auto" || rtools === "true") return ["add", "rtools"];
-  return ["add", `rtools${rtools.replace(/^rtools/, "")}`];
-}
-async function installRtools(inputs) {
-  if (process.platform !== "win32") return;
-  const args = rtoolsArgs(inputs.rtools);
-  if (!args) return;
-  await group("Installing Rtools", () => rig(args));
-}
-function repoCommand(repo) {
-  const eq = repo.match(/^([A-Za-z0-9][A-Za-z0-9._/-]*)=(.+)$/);
-  if (eq) return ["repos", "add", eq[1], eq[2], "--enable", "--force"];
-  if (/^(https?|file):\/\//.test(repo)) {
-    const url2 = new URL(repo);
-    const name = `${url2.hostname}${url2.pathname}`.replace(/[^A-Za-z0-9._/-]/g, "-").replace(/[/-]+$/, "");
-    return ["repos", "add", name, repo, "--enable", "--force"];
-  }
-  return ["repos", "enable", repo];
-}
-async function setupRepositories(inputs) {
-  if (inputs.repositories.length === 0 && inputs.useP3m) return;
-  await group("Setting up package repositories", async () => {
-    for (const repo of inputs.repositories) await rig(repoCommand(repo));
-    if (!inputs.useP3m) {
-      for (const name of ["P3M", "P3M-manylinux"]) {
-        await exec("rig", ["repos", "disable", name], {
-          ignoreReturnCode: true
-        });
-      }
-    }
-    await rig(["repos", "list"]);
-  });
-}
 
 // src/rig-install.ts
 import { createHash as createHash3 } from "node:crypto";
-import { readFileSync as readFileSync4 } from "node:fs";
+import { readFileSync as readFileSync3 } from "node:fs";
 import * as path17 from "node:path";
 
 // node_modules/@actions/tool-cache/lib/tool-cache.js
@@ -69529,44 +69249,44 @@ function extractZipNix(file, dest) {
     yield exec(`"${unzipPath}"`, args, { cwd: dest });
   });
 }
-function cacheDir(sourceDir, tool, version3, arch4) {
+function cacheDir(sourceDir, tool, version3, arch3) {
   return __awaiter19(this, void 0, void 0, function* () {
     version3 = semver3.clean(version3) || version3;
-    arch4 = arch4 || os8.arch();
-    debug(`Caching tool ${tool} ${version3} ${arch4}`);
+    arch3 = arch3 || os8.arch();
+    debug(`Caching tool ${tool} ${version3} ${arch3}`);
     debug(`source dir: ${sourceDir}`);
     if (!fs7.statSync(sourceDir).isDirectory()) {
       throw new Error("sourceDir is not a directory");
     }
-    const destPath = yield _createToolPath(tool, version3, arch4);
+    const destPath = yield _createToolPath(tool, version3, arch3);
     for (const itemName of fs7.readdirSync(sourceDir)) {
       const s = path16.join(sourceDir, itemName);
       yield cp(s, destPath, { recursive: true });
     }
-    _completeToolPath(tool, version3, arch4);
+    _completeToolPath(tool, version3, arch3);
     return destPath;
   });
 }
-function find(toolName, versionSpec, arch4) {
+function find(toolName, versionSpec, arch3) {
   if (!toolName) {
     throw new Error("toolName parameter is required");
   }
   if (!versionSpec) {
     throw new Error("versionSpec parameter is required");
   }
-  arch4 = arch4 || os8.arch();
+  arch3 = arch3 || os8.arch();
   if (!isExplicitVersion(versionSpec)) {
-    const localVersions = findAllVersions(toolName, arch4);
+    const localVersions = findAllVersions(toolName, arch3);
     const match3 = evaluateVersions(localVersions, versionSpec);
     versionSpec = match3;
   }
   let toolPath = "";
   if (versionSpec) {
     versionSpec = semver3.clean(versionSpec) || "";
-    const cachePath = path16.join(_getCacheDirectory(), toolName, versionSpec, arch4);
+    const cachePath = path16.join(_getCacheDirectory(), toolName, versionSpec, arch3);
     debug(`checking cache: ${cachePath}`);
     if (fs7.existsSync(cachePath) && fs7.existsSync(`${cachePath}.complete`)) {
-      debug(`Found tool in cache ${toolName} ${versionSpec} ${arch4}`);
+      debug(`Found tool in cache ${toolName} ${versionSpec} ${arch3}`);
       toolPath = cachePath;
     } else {
       debug("not found");
@@ -69574,15 +69294,15 @@ function find(toolName, versionSpec, arch4) {
   }
   return toolPath;
 }
-function findAllVersions(toolName, arch4) {
+function findAllVersions(toolName, arch3) {
   const versions = [];
-  arch4 = arch4 || os8.arch();
+  arch3 = arch3 || os8.arch();
   const toolPath = path16.join(_getCacheDirectory(), toolName);
   if (fs7.existsSync(toolPath)) {
     const children = fs7.readdirSync(toolPath);
     for (const child2 of children) {
       if (isExplicitVersion(child2)) {
-        const fullPath = path16.join(toolPath, child2, arch4 || "");
+        const fullPath = path16.join(toolPath, child2, arch3 || "");
         if (fs7.existsSync(fullPath) && fs7.existsSync(`${fullPath}.complete`)) {
           versions.push(child2);
         }
@@ -69600,9 +69320,9 @@ function _createExtractFolder(dest) {
     return dest;
   });
 }
-function _createToolPath(tool, version3, arch4) {
+function _createToolPath(tool, version3, arch3) {
   return __awaiter19(this, void 0, void 0, function* () {
-    const folderPath = path16.join(_getCacheDirectory(), tool, semver3.clean(version3) || version3, arch4 || "");
+    const folderPath = path16.join(_getCacheDirectory(), tool, semver3.clean(version3) || version3, arch3 || "");
     debug(`destination ${folderPath}`);
     const markerPath = `${folderPath}.complete`;
     yield rmRF(folderPath);
@@ -69611,8 +69331,8 @@ function _createToolPath(tool, version3, arch4) {
     return folderPath;
   });
 }
-function _completeToolPath(tool, version3, arch4) {
-  const folderPath = path16.join(_getCacheDirectory(), tool, semver3.clean(version3) || version3, arch4 || "");
+function _completeToolPath(tool, version3, arch3) {
+  const folderPath = path16.join(_getCacheDirectory(), tool, semver3.clean(version3) || version3, arch3 || "");
   const markerPath = `${folderPath}.complete`;
   fs7.writeFileSync(markerPath, "");
   debug("finished caching tool");
@@ -69665,8 +69385,8 @@ function _getGlobal(key, defaultValue) {
 
 // src/rig-install.ts
 var REPO = "https://github.com/r-lib/rig/releases/download";
-function rigAssetName(platform2, arch4, version3) {
-  const arm = arch4 === "arm64" || arch4 === "aarch64";
+function rigAssetName(platform2, arch3, version3) {
+  const arm = arch3 === "arm64" || arch3 === "aarch64";
   switch (platform2) {
     case "linux":
       return `rig-linux-${arm ? "aarch64" : "x86_64"}-${version3}.tar.gz`;
@@ -69681,9 +69401,9 @@ function rigAssetName(platform2, arch4, version3) {
 function rigReleaseTag(version3) {
   return version3 === "latest" ? "latest" : `v${version3.replace(/^v/, "")}`;
 }
-function rigAssetUrl(platform2, arch4, version3) {
+function rigAssetUrl(platform2, arch3, version3) {
   const v = version3 === "latest" ? "latest" : version3.replace(/^v/, "");
-  return `${REPO}/${rigReleaseTag(version3)}/${rigAssetName(platform2, arch4, v)}`;
+  return `${REPO}/${rigReleaseTag(version3)}/${rigAssetName(platform2, arch3, v)}`;
 }
 function parseRigVersion(output) {
   const m = output.match(/(\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)/);
@@ -69707,12 +69427,12 @@ async function verifyChecksum(file, version3, asset) {
     info("This rig release has no SHA256SUMS file, skipping checksum.");
     return;
   }
-  const expected = findChecksum(readFileSync4(sumsFile, "utf8"), asset);
+  const expected = findChecksum(readFileSync3(sumsFile, "utf8"), asset);
   if (!expected) {
     info(`No checksum for ${asset} in SHA256SUMS, skipping checksum.`);
     return;
   }
-  const actual = createHash3("sha256").update(readFileSync4(file)).digest("hex");
+  const actual = createHash3("sha256").update(readFileSync3(file)).digest("hex");
   if (actual !== expected) {
     throw new Error(
       `Checksum mismatch for ${asset}: expected ${expected}, got ${actual}.`
@@ -69724,18 +69444,18 @@ async function rigVersionOf(bin) {
   const out = await getExecOutput(bin, ["--version"], { silent: true });
   return parseRigVersion(out.stdout.split("\n")[0]);
 }
-async function installRig(version3, platform2 = process.platform, arch4 = process.arch) {
+async function installRig(version3, platform2 = process.platform, arch3 = process.arch) {
   const exe = platform2 === "win32" ? "rig.exe" : "rig";
   const v = version3.replace(/^v/, "");
   if (v !== "latest") {
-    const cached2 = find("rig", v, arch4);
+    const cached2 = find("rig", v, arch3);
     if (cached2) {
       info(`Found rig ${v} in the tool cache.`);
       addPath(path17.join(cached2, "bin"));
       return { version: v, path: path17.join(cached2, "bin", exe) };
     }
   }
-  const url2 = rigAssetUrl(platform2, arch4, v);
+  const url2 = rigAssetUrl(platform2, arch3, v);
   const asset = path17.basename(url2);
   info(`Downloading ${url2}`);
   const file = await downloadTool(url2);
@@ -69745,7 +69465,7 @@ async function installRig(version3, platform2 = process.platform, arch4 = proces
   if (v !== "latest" && installed !== v) {
     warning(`Asked for rig ${v}, but the download is rig ${installed}.`);
   }
-  const cached = await cacheDir(dir, "rig", installed, arch4);
+  const cached = await cacheDir(dir, "rig", installed, arch3);
   addPath(path17.join(cached, "bin"));
   return { version: installed, path: path17.join(cached, "bin", exe) };
 }
@@ -69762,143 +69482,19 @@ var STATE = {
   restoredInfo: "cache-restored-info"
 };
 
-// src/tools.ts
-import { existsSync as existsSync6, readdirSync as readdirSync3 } from "node:fs";
-import * as os9 from "node:os";
-import * as path18 from "node:path";
-var COMMAND = {
-  qpdf: "qpdf",
-  ghostscript: process.platform === "win32" ? "gswin64c" : "gs",
-  checkbashisms: "checkbashisms"
-};
-function wantedTools(mode, dir) {
-  if (mode === "false") return [];
-  if (mode === "true") return ["qpdf", "ghostscript", "checkbashisms"];
-  const tools = [];
-  if (hasVignettes(dir)) tools.push("qpdf", "ghostscript");
-  if (hasConfigure(dir)) tools.push("checkbashisms");
-  return tools;
-}
-async function onPath(cmd) {
-  return await which(cmd, false) !== "";
-}
-async function sudo(args) {
-  const root = process.getuid?.() === 0;
-  if (root) {
-    await exec(args[0], args.slice(1));
-  } else {
-    await exec("sudo", args);
-  }
-}
-async function installCheckTools(mode, dir) {
-  const wanted = wantedTools(mode, dir);
-  const missing = [];
-  for (const t of wanted) if (!await onPath(COMMAND[t])) missing.push(t);
-  if (missing.length === 0) return;
-  await group(`Installing ${missing.join(", ")}`, async () => {
-    if (process.platform === "linux") {
-      await installLinux(missing);
-    } else if (process.platform === "darwin") {
-      try {
-        await exec("brew", ["unlink", "pkg-config@0.29.2"], {
-          silent: true,
-          ignoreReturnCode: true
-        });
-      } catch {
-      }
-      process.env.HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK = "true";
-      await exec("brew", ["install", ...missing]);
-    } else if (process.platform === "win32") {
-      if (missing.includes("ghostscript")) await installGsWindows();
-    }
-  });
-}
-async function installLinux(tools) {
-  if (await onPath("apt-get")) {
-    const pkgs = tools.map((t) => t === "checkbashisms" ? "devscripts" : t);
-    process.env.DEBIAN_FRONTEND = "noninteractive";
-    await sudo(["apt-get", "update", "-y"]);
-    await sudo([
-      "apt-get",
-      "install",
-      "-y",
-      "--no-install-recommends",
-      ...pkgs
-    ]);
-  } else if (await onPath("dnf")) {
-    const pkgs = tools.map(
-      (t) => t === "checkbashisms" ? "devscripts-checkbashisms" : t
-    );
-    await sudo(["dnf", "install", "-y", ...pkgs]);
-  } else if (await onPath("zypper")) {
-    await sudo(["zypper", "--non-interactive", "install", ...tools]);
-  } else {
-    warning(`Do not know how to install ${tools.join(", ")} here.`);
-  }
-}
-async function installGsWindows() {
-  const zip = await downloadTool(
-    "https://github.com/r-lib/actions-files/releases/download/v1.0.0/ghostscript-10.03.0-win.zip"
-  );
-  const dir = await extractZip(zip);
-  const target = "c:/program files/gs";
-  await cp(dir, target, { recursive: true, force: false });
-  addPath(path18.join(target, readdirSync3(target)[0], "bin"));
-}
-function fortranFor(rVersion, arch4) {
-  if (compareVersions(rVersion, "4.7.0") >= 0 && arch4 === "arm64") {
-    return {
-      url: "https://mac.cran.dev/tools/flang-23.1.0-darwin23.tar.xz",
-      kind: "flang",
-      bin: "/opt/R/flang-23/bin"
-    };
-  }
-  if (compareVersions(rVersion, "4.3.0") < 0) return void 0;
-  return {
-    url: compareVersions(rVersion, "4.5.0") < 0 ? "https://github.com/r-hub/mac-tools/releases/download/tools/gfortran-12.2-universal.pkg" : "https://github.com/R-macos/gcc-14-branch/releases/download/gcc-14.2-darwin-r2.1/gfortran-14.2-universal.pkg",
-    kind: "pkg",
-    bin: "/opt/gfortran/bin"
-  };
-}
-async function installFortranMacOS(rVersion) {
-  const ft = fortranFor(rVersion, os9.arch());
-  if (!ft) {
-    warning(`setup-rig cannot install Fortran for R ${rVersion}.`);
-    return;
-  }
-  if (existsSync6(ft.bin)) return;
-  await group("Installing Fortran", async () => {
-    const file = await downloadTool(ft.url);
-    if (ft.kind === "flang") {
-      await sudo(["tar", "-xJf", file, "-C", "/"]);
-      if (!process.env.SDKROOT) {
-        const sdk = await getExecOutput("xcrun", ["--show-sdk-path"]);
-        exportVariable("SDKROOT", sdk.stdout.trim());
-      }
-    } else {
-      const pkg = `${file}.pkg`;
-      await mv(file, pkg);
-      await sudo(["installer", "-allowUntrusted", "-pkg", pkg, "-target", "/"]);
-    }
-    addPath(ft.bin);
-  });
-}
-
 // src/setup.ts
 function setDefaultEnv(name, value) {
-  if (value === "" || process.env[name]) return;
+  if (process.env[name]) return;
   exportVariable(name, value);
 }
 async function run() {
   const inputs = parseInputs();
   const workspace = process.env.GITHUB_WORKSPACE ?? process.cwd();
-  const dir = path19.resolve(workspace, inputs.workingDirectory);
-  const tmp = process.env.RUNNER_TEMP ?? path19.join(workspace, "..");
+  const dir = path18.resolve(workspace, inputs.workingDirectory);
+  const tmp = process.env.RUNNER_TEMP ?? path18.join(workspace, "..");
   setDefaultEnv("RIG_MODE", "user");
-  setDefaultEnv("RIG_CACHE_DIR", path19.join(tmp, "setup-rig-cache"));
-  setDefaultEnv("RIG_PREFER_BINARY", inputs.preferBinary);
-  setDefaultEnv("RIG_EXCLUDE_NEWER", inputs.excludeNewer);
-  setDefaultEnv("RIG_SYSREQS", inputs.sysreqs);
+  setDefaultEnv("RIG_CACHE_DIR", path18.join(tmp, "setup-rig-cache"));
+  setDefaultEnv("RIG_PREFER_BINARY", "true");
   setDefaultEnv("NOT_CRAN", "true");
   setDefaultEnv("TZ", "UTC");
   setDefaultEnv("_R_CHECK_SYSTEM_CLOCK_", "FALSE");
@@ -69912,27 +69508,25 @@ async function run() {
   const dirs = await rigJson(["system", "dirs"]);
   addPath(dirs.binary_dir);
   setOutput("cache-dir", dirs.cache_dir);
-  const project = detectProject(dir);
-  const spec = resolveRSpec(inputs, project);
-  const r = await installR(spec, inputs);
+  const spec = resolveRSpec(inputs.rVersion, dir);
+  const r = await installR(spec, inputs.rArch);
   setOutput("r-version", r.version);
   setOutput("r-path", r.binary);
-  await installRtools(inputs);
-  await setupRepositories(inputs);
+  const lib = await rigJson(["library", "default"]);
+  setOutput("library", lib.path);
   const enabled2 = cacheEnabled(inputs.enableCache);
   saveState(STATE.enabled, String(enabled2));
   saveState(STATE.saveMode, inputs.saveCache);
   saveState(STATE.prune, String(inputs.pruneCache));
   saveState(STATE.cacheDir, dirs.cache_dir);
+  setOutput("cache-hit", "false");
   if (enabled2) {
     const platform2 = await rigJson(["system", "detect-platform"]);
-    const rDevel = ["devel", "next"].includes(spec) || ["devel", "next"].includes(r.name);
     const { key, restoreKeys } = cacheKeys({
       platform: platform2.platform,
       rVersion: r.version,
-      rDevel,
+      rDevel: ["devel", "next"].includes(spec) || ["devel", "next"].includes(r.name),
       filesHash: await hashFiles2(inputs.cacheDependencyGlob, dir),
-      unpinned: isUnpinned(inputs, project),
       suffix: inputs.cacheSuffix
     });
     const hit = await restore(dirs.cache_dir, key, restoreKeys);
@@ -69942,29 +69536,10 @@ async function run() {
     setOutput("cache-hit", String(hit === key));
     const info2 = await rigJson(["cache", "info"]);
     saveState(STATE.restoredInfo, JSON.stringify(info2));
-  } else {
-    setOutput("cache-hit", "false");
   }
-  await installCheckTools(inputs.checkTools, dir);
-  if (process.platform === "darwin" && (inputs.macosFortran === "true" || inputs.macosFortran === "auto" && hasFortran(dir))) {
-    await installFortranMacOS(r.version);
-  }
-  const needs = needsPackages(project.description, inputs.needs);
-  const cmds = dependencyCommands(inputs, project, needs);
-  for (const cmd of cmds) {
-    await group(`rig ${cmd.join(" ")}`, () => rig(cmd, { cwd: dir }));
-  }
-  if (cmds.length > 0) {
-    await group(
-      "Installed packages",
-      () => exec("rig", ["pkg", "list"], { cwd: dir, ignoreReturnCode: true })
-    );
-  }
-  const lib = await rigJson(["library", "default"]);
-  setOutput("library", lib.path);
   const matchers = fileURLToPath(new URL("../../matchers/", import.meta.url));
   for (const m of ["rcmdcheck.json", "testthat.json", "r.json"]) {
-    info(`::add-matcher::${path19.join(matchers, m)}`);
+    info(`::add-matcher::${path18.join(matchers, m)}`);
   }
 }
 run().catch((e) => setFailed(e instanceof Error ? e.message : String(e)));

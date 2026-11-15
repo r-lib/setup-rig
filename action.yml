@@ -1,7 +1,7 @@
 name: "Setup rig and R"
 description: >-
-  Install rig, the R Installation Manager, then R, and optionally the
-  package dependencies of an R package or rig project, with caching.
+  Install rig, the R Installation Manager, and R, and cache rig's cache
+  directory.
 author: "r-lib"
 branding:
   icon: "package"
@@ -20,82 +20,11 @@ inputs:
   r-arch:
     description: "Architecture of R on macOS and Windows, passed to `rig add --arch`."
     default: ""
-  rtools:
-    description: >-
-      Windows only. `auto` installs the Rtools that matches the installed
-      R version, `none` skips Rtools, a version (e.g. `45`) installs that one.
-    default: "auto"
-  pak:
-    description: >-
-      Whether to install pak into the new R installation. `false` (the
-      default), `true`/`stable` or `devel`.
-    default: "false"
   working-directory:
-    description: "Directory of the R package (DESCRIPTION) or rig project (rproj.toml)."
+    description: >-
+      Where to look for `rproj.lock` and `renv.lock`, and the base directory
+      of `cache-dependency-glob`.
     default: "."
-  install-dependencies:
-    description: >-
-      `auto`: if there is an `rproj.toml`, run `rig proj sync`; else if there
-      is a `DESCRIPTION`, install the dependencies of the package; else do
-      nothing. `true`: the same, but fail if there is neither file.
-      `false`: do not install dependencies.
-    default: "auto"
-  dev-dependencies:
-    description: "Also install the development dependencies (Suggests, the `dev` group)."
-    default: "true"
-  needs:
-    description: "`Config/Needs/<name>` dependency groups to install, comma or newline separated."
-    default: ""
-  extra-packages:
-    description: >-
-      Extra packages to install, comma or newline separated, in any form
-      that `rig pkg install` takes, e.g. `rcmdcheck`, `r-lib/cli`.
-    default: ""
-  locked:
-    description: "Run `rig proj sync --locked`: fail if `rproj.lock` is missing or out of date."
-    default: "false"
-  upgrade:
-    description: >-
-      For rig projects, run `rig proj lock --upgrade` before `rig proj sync`,
-      to install the latest versions of all dependencies.
-    default: "false"
-  repositories:
-    description: >-
-      Package repositories to enable, comma or newline separated: names
-      that rig knows (e.g. `bioconductor`, `RHUB`), URLs, or `name=URL`.
-    default: ""
-  use-p3m:
-    description: "Use Posit Public Package Manager. `false` disables the P3M repositories."
-    default: "true"
-  prefer-binary:
-    description: "Sets `RIG_PREFER_BINARY`: `true`, `false` or a number of versions to look back."
-    default: "true"
-  exclude-newer:
-    description: "Sets `RIG_EXCLUDE_NEWER`: ignore package versions newer than a date, or a span, e.g. `7 days`."
-    default: ""
-  sysreqs:
-    description: "Sets `RIG_SYSREQS` (Linux): `true`, `false` or `print`."
-    default: "true"
-  lock-args:
-    description: "Extra arguments for `rig proj lock`."
-    default: ""
-  sync-args:
-    description: "Extra arguments for `rig proj sync`."
-    default: ""
-  install-args:
-    description: "Extra arguments for `rig pkg install`."
-    default: ""
-  check-tools:
-    description: >-
-      Tools for `R CMD build` and `R CMD check`: qpdf, ghostscript,
-      checkbashisms. `auto` installs only the ones the package needs and
-      that are missing, `true` installs all, `false` none.
-    default: "auto"
-  macos-fortran:
-    description: >-
-      macOS only. Install the Fortran compiler that matches R. `auto` installs
-      it if the package has Fortran sources in `src/`.
-    default: "auto"
   enable-cache:
     description: >-
       Cache rig's cache directory. `auto` turns it on for GitHub-hosted
@@ -114,7 +43,9 @@ inputs:
     description: "Extra string added to the cache key."
     default: ""
   prune-cache:
-    description: "Remove downloaded package files and metadata before saving the cache, keep the packages rig built."
+    description: >-
+      Remove downloaded package files and metadata before saving the cache,
+      keep the packages rig built from source.
     default: "true"
   save-cache:
     description: >-
