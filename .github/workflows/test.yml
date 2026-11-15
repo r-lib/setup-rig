@@ -55,6 +55,8 @@ jobs:
           echo "cache ${{ steps.setup.outputs.cache-key }} hit: ${{ steps.setup.outputs.cache-hit }}"
           R --version
           Rscript -e 'stopifnot(getRversion() == "${{ steps.setup.outputs.r-version }}")'
+      - name: Install Rtools
+        run: rig rtools add
       - run: rig pkg install --no-install-self --dev .
       - run: rig pkg install rcmdcheck
       - run: Rscript -e 'library(cli); library(testthat); library(rcmdcheck)'
