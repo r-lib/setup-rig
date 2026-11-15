@@ -1,0 +1,7 @@
+[project]
+name = "setuprigproj"
+version = "0.1.0"
+type = "project"
+
+[dependencies]
+cli = ">= 3.0.0"

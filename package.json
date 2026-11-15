@@ -1,0 +1,36 @@
+{
+  "name": "setup-rig",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GitHub Action to install rig, R and R package dependencies",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/r-lib/setup-rig.git"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "check": "biome check .",
+    "format": "biome check --write .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "all": "npm run check && npm run typecheck && npm test && npm run build"
+  },
+  "dependencies": {
+    "@actions/cache": "^6.3.0",
+    "@actions/core": "^3.0.1",
+    "@actions/exec": "^3.0.0",
+    "@actions/glob": "^0.7.0",
+    "@actions/io": "^3.0.2",
+    "@actions/tool-cache": "^4.0.0",
+    "string-argv": "^0.4.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.7",
+    "@types/node": "^24.0.0",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}

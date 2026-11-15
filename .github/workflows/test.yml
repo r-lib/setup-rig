@@ -1,0 +1,110 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run all
+      - name: dist/ is up to date
+        run: git diff --exit-code -- dist/
+
+  package:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} (R ${{ matrix.r }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-15-intel, windows-latest, windows-11-arm]
+        r: [release]
+        include:
+          - {os: ubuntu-latest, r: devel}
+          - {os: ubuntu-latest, r: oldrel/1}
+          - {os: ubuntu-latest, r: "4.3"}
+          - {os: macos-latest, r: devel}
+          - {os: windows-latest, r: devel}
+    steps:
+      - uses: actions/checkout@v5
+      - id: setup
+        uses: ./
+        with:
+          r-version: ${{ matrix.r }}
+          working-directory: __tests__/fixtures/pkg
+          extra-packages: rcmdcheck
+          needs: check
+          save-cache: "true"
+      - name: Check outputs
+        shell: bash
+        run: |
+          echo "rig ${{ steps.setup.outputs.rig-version }} at ${{ steps.setup.outputs.rig-path }}"
+          echo "R ${{ steps.setup.outputs.r-version }} at ${{ steps.setup.outputs.r-path }}"
+          echo "library ${{ steps.setup.outputs.library }}"
+          echo "cache ${{ steps.setup.outputs.cache-key }} hit: ${{ steps.setup.outputs.cache-hit }}"
+          R --version
+          Rscript -e 'stopifnot(getRversion() == "${{ steps.setup.outputs.r-version }}")'
+          Rscript -e 'library(cli); library(testthat); library(rcmdcheck)'
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          working-directory: __tests__/fixtures/pkg
+          args: 'c("--no-manual")'
+          upload-results: never
+
+  project:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        upgrade: ["false", "true"]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./
+        with:
+          working-directory: __tests__/fixtures/proj
+          upgrade: ${{ matrix.upgrade }}
+      - name: Project library has cli
+        shell: bash
+        working-directory: __tests__/fixtures/proj
+        run: rig run -e 'library(cli); cli::cli_text("ok")'
+
+  container:
+    runs-on: ubuntu-latest
+    name: container ${{ matrix.image }}
+    container: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["ubuntu:24.04", "fedora:44"]
+    steps:
+      - name: git for checkout
+        run: |
+          if command -v apt-get; then apt-get update && apt-get install -y git ca-certificates; fi
+          if command -v dnf; then dnf install -y git tar xz; fi
+      - uses: actions/checkout@v5
+      - uses: ./
+        with:
+          working-directory: __tests__/fixtures/pkg
+      - run: Rscript -e 'library(cli)'
+
+  no-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./
+        with:
+          rig-version: "0.11.1"
+          install-dependencies: "false"
+          enable-cache: "false"
+      - run: rig --version && R --version
