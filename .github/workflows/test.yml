@@ -110,3 +110,24 @@ jobs:
           rig-version: "0.11.1"
           enable-cache: "false"
       - run: rig --version && R --version
+
+  nightly-rig:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+      - id: setup
+        uses: ./
+        with:
+          rig-version: nightly
+          enable-cache: "false"
+      - run: |
+          rig --version
+          echo "${{ steps.setup.outputs.rig-version }}" | grep -- -dev
+          R --version

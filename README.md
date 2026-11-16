@@ -114,7 +114,7 @@ credentials in an earlier step if you need them, e.g.
 
 | input | default | |
 |---|---|---|
-| `rig-version` | `latest` | rig version |
+| `rig-version` | `latest` | rig version: `latest`, `nightly` or `x.y.z` |
 | `r-version` | | R version; empty means `rproj.lock`, then `renv.lock`, then `release` |
 | `r-arch` | | macOS / Windows architecture of R |
 | `working-directory` | `.` | where the lock files are, base of the cache globs |

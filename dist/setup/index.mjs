@@ -69398,11 +69398,14 @@ function rigAssetName(platform2, arch3, version3) {
       throw new Error(`rig does not support this platform: ${platform2}`);
   }
 }
+function isRollingVersion(version3) {
+  return version3 === "latest" || version3 === "nightly";
+}
 function rigReleaseTag(version3) {
-  return version3 === "latest" ? "latest" : `v${version3.replace(/^v/, "")}`;
+  return isRollingVersion(version3) ? version3 : `v${version3.replace(/^v/, "")}`;
 }
 function rigAssetUrl(platform2, arch3, version3) {
-  const v = version3 === "latest" ? "latest" : version3.replace(/^v/, "");
+  const v = isRollingVersion(version3) ? version3 : version3.replace(/^v/, "");
   return `${REPO}/${rigReleaseTag(version3)}/${rigAssetName(platform2, arch3, v)}`;
 }
 function parseRigVersion(output) {
@@ -69447,7 +69450,7 @@ async function rigVersionOf(bin) {
 async function installRig(version3, platform2 = process.platform, arch3 = process.arch) {
   const exe = platform2 === "win32" ? "rig.exe" : "rig";
   const v = version3.replace(/^v/, "");
-  if (v !== "latest") {
+  if (!isRollingVersion(v)) {
     const cached2 = find("rig", v, arch3);
     if (cached2) {
       info(`Found rig ${v} in the tool cache.`);
@@ -69462,7 +69465,7 @@ async function installRig(version3, platform2 = process.platform, arch3 = proces
   await verifyChecksum(file, v, asset);
   const dir = platform2 === "win32" ? await extractZip(file) : await extractTar2(file, void 0, "xz");
   const installed = await rigVersionOf(path17.join(dir, "bin", exe));
-  if (v !== "latest" && installed !== v) {
+  if (!isRollingVersion(v) && installed !== v) {
     warning(`Asked for rig ${v}, but the download is rig ${installed}.`);
   }
   const cached = await cacheDir(dir, "rig", installed, arch3);

@@ -9,7 +9,9 @@ branding:
 
 inputs:
   rig-version:
-    description: "rig version to install: `latest` or `x.y.z`."
+    description: >-
+      rig version to install: `latest`, `nightly` (the latest development
+      build) or `x.y.z`.
     default: "latest"
   r-version:
     description: >-

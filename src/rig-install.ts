@@ -26,8 +26,16 @@ export function rigAssetName(
   }
 }
 
+/**
+ * `latest` and `nightly` are release tags that move, the others are fixed
+ * versions.
+ */
+export function isRollingVersion(version: string): boolean {
+  return version === "latest" || version === "nightly";
+}
+
 export function rigReleaseTag(version: string): string {
-  return version === "latest" ? "latest" : `v${version.replace(/^v/, "")}`;
+  return isRollingVersion(version) ? version : `v${version.replace(/^v/, "")}`;
 }
 
 export function rigAssetUrl(
@@ -35,7 +43,7 @@ export function rigAssetUrl(
   arch: string,
   version: string,
 ): string {
-  const v = version === "latest" ? "latest" : version.replace(/^v/, "");
+  const v = isRollingVersion(version) ? version : version.replace(/^v/, "");
   return `${REPO}/${rigReleaseTag(version)}/${rigAssetName(platform, arch, v)}`;
 }
 
@@ -102,7 +110,7 @@ export async function installRig(
   const exe = platform === "win32" ? "rig.exe" : "rig";
   const v = version.replace(/^v/, "");
 
-  if (v !== "latest") {
+  if (!isRollingVersion(v)) {
     const cached = tc.find("rig", v, arch);
     if (cached) {
       core.info(`Found rig ${v} in the tool cache.`);
@@ -122,7 +130,7 @@ export async function installRig(
       : await tc.extractTar(file, undefined, "xz");
 
   const installed = await rigVersionOf(path.join(dir, "bin", exe));
-  if (v !== "latest" && installed !== v) {
+  if (!isRollingVersion(v) && installed !== v) {
     core.warning(`Asked for rig ${v}, but the download is rig ${installed}.`);
   }
   const cached = await tc.cacheDir(dir, "rig", installed, arch);

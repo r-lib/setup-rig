@@ -64,6 +64,9 @@ describe("rig download", () => {
     expect(rigAssetUrl("linux", "x64", "latest")).toBe(
       "https://github.com/r-lib/rig/releases/download/latest/rig-linux-x86_64-latest.tar.gz",
     );
+    expect(rigAssetUrl("win32", "arm64", "nightly")).toBe(
+      "https://github.com/r-lib/rig/releases/download/nightly/rig-windows-arm64-nightly.zip",
+    );
     expect(rigAssetUrl("darwin", "x64", "v0.11.1")).toBe(
       "https://github.com/r-lib/rig/releases/download/v0.11.1/rig-macos-x86_64-0.11.1.tar.gz",
     );
@@ -72,6 +75,11 @@ describe("rig download", () => {
     expect(
       parseRigVersion("RIG -- The R Installation Manager 0.11.2-dev"),
     ).toBe("0.11.2-dev");
+    expect(
+      parseRigVersion(
+        "RIG -- The R Installation Manager 0.11.2-dev.20261116.g31ea212",
+      ),
+    ).toBe("0.11.2-dev.20261116.g31ea212");
     expect(parseRigVersion("RIG -- The R Installation Manager 0.11.1")).toBe(
       "0.11.1",
     );
