@@ -68867,8 +68867,58 @@ function parseInputs(get = getInput) {
   };
 }
 
+// src/macos.ts
+import * as fs7 from "node:fs";
+function searchDirs(...flags) {
+  const dirs = /* @__PURE__ */ new Set();
+  for (const f of flags) {
+    for (const m of f.matchAll(/(?:^|\s)-[LI]\s*(\S+)/g)) {
+      const dir = m[1].replace(/\/+$/, "");
+      if (dir.startsWith("/opt/R/") && !dir.includes("..")) dirs.add(dir);
+    }
+  }
+  return [...dirs];
+}
+async function rConfig(rBinary, name) {
+  const out = await getExecOutput(rBinary, ["CMD", "config", name], {
+    silent: true,
+    ignoreReturnCode: true
+  });
+  return out.exitCode === 0 ? out.stdout.trim() : "";
+}
+async function createSearchDirs(rBinary) {
+  const flags = await Promise.all(
+    ["LDFLAGS", "CPPFLAGS"].map((n) => rConfig(rBinary, n))
+  );
+  const missing = searchDirs(...flags).filter((d) => !fs7.existsSync(d));
+  if (missing.length === 0) return;
+  const failed = [];
+  for (const dir of missing) {
+    try {
+      fs7.mkdirSync(dir, { recursive: true });
+    } catch {
+      failed.push(dir);
+    }
+  }
+  if (failed.length > 0) {
+    const code = await exec("sudo", ["-n", "mkdir", "-p", ...failed], {
+      ignoreReturnCode: true,
+      silent: true
+    }).catch(() => 1);
+    if (code !== 0) {
+      warning(
+        `Could not create ${failed.join(", ")}. The linker may warn about missing search paths, and R CMD check may report this as a WARNING.`
+      );
+      return;
+    }
+  }
+  info(
+    `Created empty directories for R's compiler flags: ${missing.join(", ")}`
+  );
+}
+
 // src/project.ts
-import { existsSync as existsSync4, readFileSync as readFileSync2 } from "node:fs";
+import { existsSync as existsSync5, readFileSync as readFileSync2 } from "node:fs";
 import * as path14 from "node:path";
 function lockRVersion(text) {
   const versions = [...text.matchAll(/^\s*r_version\s*=\s*"([^"]+)"/gm)].map(
@@ -68889,12 +68939,12 @@ function compareVersions(a, b) {
 function resolveRSpec(rVersion, dir) {
   if (rVersion !== "") return rVersion;
   const lock = path14.join(dir, "rproj.lock");
-  if (existsSync4(lock)) {
+  if (existsSync5(lock)) {
     const v = lockRVersion(readFileSync2(lock, "utf8"));
     if (v) return v;
   }
   const renv = path14.join(dir, "renv.lock");
-  if (existsSync4(renv)) return renv;
+  if (existsSync5(renv)) return renv;
   return "release";
 }
 
@@ -68950,7 +69000,7 @@ import * as path17 from "node:path";
 
 // node_modules/@actions/tool-cache/lib/tool-cache.js
 import * as crypto3 from "crypto";
-import * as fs7 from "fs";
+import * as fs8 from "fs";
 
 // node_modules/@actions/tool-cache/lib/manifest.js
 var semver2 = __toESM(require_semver2(), 1);
@@ -69095,7 +69145,7 @@ function downloadTool(url2, dest, auth, headers) {
 }
 function downloadToolAttempt(url2, dest, auth, headers) {
   return __awaiter19(this, void 0, void 0, function* () {
-    if (fs7.existsSync(dest)) {
+    if (fs8.existsSync(dest)) {
       throw new Error(`Destination file path ${dest} already exists`);
     }
     const http4 = new HttpClient(userAgent, [], {
@@ -69119,7 +69169,7 @@ function downloadToolAttempt(url2, dest, auth, headers) {
     const readStream = responseMessageFactory();
     let succeeded = false;
     try {
-      yield pipeline3(readStream, fs7.createWriteStream(dest));
+      yield pipeline3(readStream, fs8.createWriteStream(dest));
       debug("download complete");
       succeeded = true;
       return dest;
@@ -69255,11 +69305,11 @@ function cacheDir(sourceDir, tool, version3, arch3) {
     arch3 = arch3 || os8.arch();
     debug(`Caching tool ${tool} ${version3} ${arch3}`);
     debug(`source dir: ${sourceDir}`);
-    if (!fs7.statSync(sourceDir).isDirectory()) {
+    if (!fs8.statSync(sourceDir).isDirectory()) {
       throw new Error("sourceDir is not a directory");
     }
     const destPath = yield _createToolPath(tool, version3, arch3);
-    for (const itemName of fs7.readdirSync(sourceDir)) {
+    for (const itemName of fs8.readdirSync(sourceDir)) {
       const s = path16.join(sourceDir, itemName);
       yield cp(s, destPath, { recursive: true });
     }
@@ -69285,7 +69335,7 @@ function find(toolName, versionSpec, arch3) {
     versionSpec = semver3.clean(versionSpec) || "";
     const cachePath = path16.join(_getCacheDirectory(), toolName, versionSpec, arch3);
     debug(`checking cache: ${cachePath}`);
-    if (fs7.existsSync(cachePath) && fs7.existsSync(`${cachePath}.complete`)) {
+    if (fs8.existsSync(cachePath) && fs8.existsSync(`${cachePath}.complete`)) {
       debug(`Found tool in cache ${toolName} ${versionSpec} ${arch3}`);
       toolPath = cachePath;
     } else {
@@ -69298,12 +69348,12 @@ function findAllVersions(toolName, arch3) {
   const versions = [];
   arch3 = arch3 || os8.arch();
   const toolPath = path16.join(_getCacheDirectory(), toolName);
-  if (fs7.existsSync(toolPath)) {
-    const children = fs7.readdirSync(toolPath);
+  if (fs8.existsSync(toolPath)) {
+    const children = fs8.readdirSync(toolPath);
     for (const child2 of children) {
       if (isExplicitVersion(child2)) {
         const fullPath = path16.join(toolPath, child2, arch3 || "");
-        if (fs7.existsSync(fullPath) && fs7.existsSync(`${fullPath}.complete`)) {
+        if (fs8.existsSync(fullPath) && fs8.existsSync(`${fullPath}.complete`)) {
           versions.push(child2);
         }
       }
@@ -69334,7 +69384,7 @@ function _createToolPath(tool, version3, arch3) {
 function _completeToolPath(tool, version3, arch3) {
   const folderPath = path16.join(_getCacheDirectory(), tool, semver3.clean(version3) || version3, arch3 || "");
   const markerPath = `${folderPath}.complete`;
-  fs7.writeFileSync(markerPath, "");
+  fs8.writeFileSync(markerPath, "");
   debug("finished caching tool");
 }
 function isExplicitVersion(versionSpec) {
@@ -69513,6 +69563,7 @@ async function run() {
   setOutput("cache-dir", dirs.cache_dir);
   const spec = resolveRSpec(inputs.rVersion, dir);
   const r = await installR(spec, inputs.rArch);
+  if (process.platform === "darwin") await createSearchDirs(r.binary);
   setOutput("r-version", r.version);
   setOutput("r-path", r.binary);
   const lib = await rigJson(["library", "default"]);

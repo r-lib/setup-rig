@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import * as core from "@actions/core";
 import { cacheEnabled, cacheKeys, hashFiles, restore } from "./cache.js";
 import { parseInputs } from "./inputs.js";
+import { createSearchDirs } from "./macos.js";
 import { resolveRSpec } from "./project.js";
 import { installR } from "./r-install.js";
 import {
@@ -47,6 +48,7 @@ async function run() {
 
   const spec = resolveRSpec(inputs.rVersion, dir);
   const r = await installR(spec, inputs.rArch);
+  if (process.platform === "darwin") await createSearchDirs(r.binary);
   core.setOutput("r-version", r.version);
   core.setOutput("r-path", r.binary);
   const lib = await rigJson<LibraryInfo>(["library", "default"]);

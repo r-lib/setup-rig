@@ -15,7 +15,12 @@ step it replaces `r-lib/actions/setup-r` and
 
 rig runs in [user mode](https://r-lib.github.io/rig/admin-vs-user-mode.html):
 R goes into the home directory, and nothing needs `sudo` except system
-packages on Linux.
+packages on Linux, and two empty directories on macOS:
+
+CRAN's macOS builds of R point the compiler to `/opt/R/<arch>/lib` and
+`/opt/R/<arch>/include`. setup-rig creates these as empty directories (with
+`sudo`) if they are missing, otherwise the linker warns about them and
+`R CMD check` reports a WARNING.
 
 ## R CMD check
 

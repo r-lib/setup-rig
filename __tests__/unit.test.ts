@@ -8,6 +8,7 @@ import {
   shouldSave,
 } from "../src/cache.js";
 import { type Inputs, parseInputs } from "../src/inputs.js";
+import { searchDirs } from "../src/macos.js";
 import { lockRVersion, resolveRSpec } from "../src/project.js";
 import { rAddArgs } from "../src/r-install.js";
 import type { CacheInfo } from "../src/rig.js";
@@ -189,5 +190,34 @@ describe("cache", () => {
     expect(cacheChanged(info(1, 5), info(1, 9), true)).toBe(false);
     expect(cacheChanged(info(1, 5), info(1, 9), false)).toBe(true);
     expect(cacheChanged(info(1, 5), info(2, 5), true)).toBe(true);
+  });
+});
+
+describe("searchDirs", () => {
+  it("finds /opt/R dirs in arm64 flags", () => {
+    expect(searchDirs("-L/opt/R/arm64/lib", "-I/opt/R/arm64/include")).toEqual([
+      "/opt/R/arm64/lib",
+      "/opt/R/arm64/include",
+    ]);
+  });
+
+  it("finds /opt/R dirs in x86_64 flags", () => {
+    expect(
+      searchDirs("-L/opt/R/x86_64/lib", "-I/opt/R/x86_64/include"),
+    ).toEqual(["/opt/R/x86_64/lib", "/opt/R/x86_64/include"]);
+  });
+
+  it("drops duplicates, other paths and odd paths", () => {
+    expect(
+      searchDirs(
+        "-L/opt/R/arm64/lib -L/usr/local/lib -L/opt/R/arm64/lib/",
+        "-I/opt/homebrew/include -I/opt/R/../etc -DNDEBUG",
+      ),
+    ).toEqual(["/opt/R/arm64/lib"]);
+  });
+
+  it("handles empty flags", () => {
+    expect(searchDirs("", "")).toEqual([]);
+    expect(searchDirs()).toEqual([]);
   });
 });
