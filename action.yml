@@ -16,7 +16,7 @@ inputs:
   r-version:
     description: >-
       R version, any version spec that `rig add` takes: `release`, `devel`,
-      `next`, `oldrel`, `oldrel/N`, `x.y`, `x.y.z`. If empty, the R version
+      `next`, `oldrel`, `oldrel-N`, `x.y`, `x.y.z`. If empty, the R version
       of `rproj.lock`, then of `renv.lock`, else `release`.
     default: ""
   r-arch:

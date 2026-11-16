@@ -8,7 +8,7 @@ step it replaces `r-lib/actions/setup-r` and
 `r-lib/actions/setup-r-dependencies`.
 
 - Installs any R version that rig can: `release`, `devel`, `next`,
-  `oldrel/N`, `4.5`, `4.5.2`, on Linux (x86_64, arm64), macOS (arm64,
+  `oldrel-N` (or `oldrel/N`), `4.5`, `4.5.2`, on Linux (x86_64, arm64), macOS (arm64,
   x86_64) and Windows (x86_64, arm64), including containers.
 - Caches rig's cache directory, so packages that rig built from source are
   not built again.
@@ -41,7 +41,7 @@ jobs:
           - {os: windows-latest,   r: release}
           - {os: ubuntu-latest,    r: devel}
           - {os: ubuntu-latest,    r: release}
-          - {os: ubuntu-latest,    r: oldrel/1}
+          - {os: ubuntu-latest,    r: oldrel-1}
           - {os: ubuntu-24.04-arm, r: release}
 
     steps:
