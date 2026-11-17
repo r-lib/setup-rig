@@ -2,27 +2,50 @@
 
 A GitHub Action that installs [rig](https://github.com/r-lib/rig), the R
 Installation Manager, and R, and caches rig's cache directory. With rig on
-the `PATH`, the rest of the workflow uses rig to install packages, Rtools,
+the `PATH`, the rest of the workflow can use rig to install packages, Rtools,
 or more R versions. Together with a `rig pkg install` or `rig proj sync`
 step it replaces `r-lib/actions/setup-r` and
 `r-lib/actions/setup-r-dependencies`.
 
 - Installs any R version that rig can: `release`, `devel`, `next`,
-  `oldrel-N` (or `oldrel/N`), `4.5`, `4.5.2`, on Linux (x86_64, arm64), macOS (arm64,
-  x86_64) and Windows (x86_64, arm64), including containers.
+  `oldrel-N` (or `oldrel/N`), `4.5`, `4.5.2`, on Linux (x86_64, arm64),
+  macOS (arm64, x86_64) and Windows (x86_64, arm64), including containers.
 - Caches rig's cache directory, so packages that rig built from source are
   not built again.
 
 rig runs in [user mode](https://r-lib.github.io/rig/admin-vs-user-mode.html):
 R goes into the home directory, and nothing needs `sudo` except system
-packages on Linux, and two empty directories on macOS:
+packages on Linux, and creating the `/opt/R/<arch>/lib` and
+`/opt/R/<arch>/include` directories which are needed to avoid an
+`R CMD check` warning.
 
-CRAN's macOS builds of R point the compiler to `/opt/R/<arch>/lib` and
-`/opt/R/<arch>/include`. setup-rig creates these as empty directories (with
-`sudo`) if they are missing, otherwise the linker warns about them and
-`R CMD check` reports a WARNING.
+## Installing packages
 
-## R CMD check
+setup-rig does not install packages. Use rig in a step after it:
+
+- dependencies of a package, including `Suggests`:
+  `rig pkg install --no-install-self --dev .`
+- a rig project: `rig proj sync`, or `rig proj sync --locked` to fail if
+  `rproj.lock` is out of date, or `rig proj lock --upgrade && rig proj sync`
+  to check against the newest versions of the dependencies.
+- other packages: `rig pkg install rcmdcheck r-lib/cli`.
+
+## Related actions and tools
+
+Other things you may need:
+
+- Rtools on Windows: `rig rtools add`.
+- More repositories: `rig repos enable bioconductor`.
+- pak: `rig system add-pak`.
+- Tools for `R CMD check --as-cran`: e.g. `sudo apt-get install qpdf` or
+  `brew install qpdf`.
+- pandoc and Quarto: `r-lib/actions/setup-pandoc`,
+  `quarto-dev/quarto-actions/setup`.
+
+rig reads its settings from environment variables, set them for the job to
+change them, e.g. `RIG_EXCLUDE_NEWER`, `RIG_SYSREQS`. See `rig config --help`.
+
+## Example `R CMD check` workflow
 
 ```yaml
 name: R-CMD-check
@@ -62,30 +85,20 @@ jobs:
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
 ```
 
-## Installing packages
+For repositories that have an `rproj.toml` manifest without an `rproj.lock`
+lock file use `rig proj sync` instead:
+```yaml
+      - run: rig proj sync --no-install-self --group check
+```
+This also installs the `check` dependency group. Add the rcmdcheck package
+there to use the `r-lib/actions/check-package` action.
 
-setup-rig does not install packages. Use rig in a step after it:
-
-- dependencies of a package, including `Suggests`:
-  `rig pkg install --no-install-self --dev .`
-- a rig project: `rig proj sync`; `rig proj sync --locked` to fail if
-  `rproj.lock` is out of date; `rig proj lock --upgrade && rig proj sync`
-  to check against the newest versions of the dependencies.
-- other packages: `rig pkg install rcmdcheck r-lib/cli`.
-
-Other things you may need:
-
-- Rtools on Windows: `rig rtools add`.
-- More repositories: `rig repos enable bioconductor`.
-- pak: `rig system add-pak`.
-- Tools for `R CMD check --as-cran`: e.g. `sudo apt-get install qpdf` or
-  `brew install qpdf`.
-- pandoc and Quarto: `r-lib/actions/setup-pandoc`,
-  `quarto-dev/quarto-actions/setup`.
-
-rig reads its settings from environment variables, set them for the job to
-change them, e.g. `RIG_PREFER_BINARY`, `RIG_EXCLUDE_NEWER`, `RIG_SYSREQS`.
-See `rig config --help`.
+For repositories that also have an `rproj.lock` lock file you need to upgrade
+dependency versions if you want to test against the latest package versions:
+```yaml
+      - run: rig proj lock --upgrade
+      - run: rig proj sync --no-install-self --group check
+```
 
 ## Caching
 
