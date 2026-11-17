@@ -34,6 +34,13 @@ describe("inputs", () => {
     expect(i.enableCache).toBe("auto");
     expect(i.saveCache).toBe("auto");
     expect(i.pruneCache).toBe(true);
+    expect(i.preferBinary).toBe("true");
+  });
+  it("parses prefer-binary", () => {
+    expect(inputs({ "prefer-binary": "False" }).preferBinary).toBe("false");
+    expect(inputs({ "prefer-binary": " 5 " }).preferBinary).toBe("5");
+    expect(() => inputs({ "prefer-binary": "-1" })).toThrow();
+    expect(() => inputs({ "prefer-binary": "maybe" })).toThrow();
   });
   it("splits globs on lines", () => {
     expect(

@@ -30,7 +30,7 @@ async function run() {
 
   setDefaultEnv("RIG_MODE", "user");
   setDefaultEnv("RIG_CACHE_DIR", path.join(tmp, "setup-rig-cache"));
-  setDefaultEnv("RIG_PREFER_BINARY", "true");
+  setDefaultEnv("RIG_PREFER_BINARY", inputs.preferBinary);
   setDefaultEnv("NOT_CRAN", "true");
   setDefaultEnv("TZ", "UTC");
   setDefaultEnv("_R_CHECK_SYSTEM_CLOCK_", "FALSE");

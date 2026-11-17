@@ -68846,6 +68846,13 @@ function parseBool(name, value) {
   if (["false", "no", "off", "0"].includes(v)) return false;
   throw new Error(`Input '${name}' must be true or false, not '${value}'.`);
 }
+function parsePreferBinary(value) {
+  const v = (value.trim() || "true").toLowerCase();
+  if (v === "true" || v === "false" || /^[0-9]+$/.test(v)) return v;
+  throw new Error(
+    `Input 'prefer-binary' must be true, false or a number, not '${value}'.`
+  );
+}
 function parseAuto(name, value) {
   const v = (value.trim() || "auto").toLowerCase();
   if (v === "auto" || v === "true" || v === "false") return v;
@@ -68858,6 +68865,7 @@ function parseInputs(get = getInput) {
     rigVersion: get("rig-version").trim() || "latest",
     rVersion: get("r-version").trim(),
     rArch: get("r-arch").trim(),
+    preferBinary: parsePreferBinary(get("prefer-binary")),
     workingDirectory: get("working-directory").trim() || ".",
     enableCache: parseAuto("enable-cache", get("enable-cache")),
     cacheDependencyGlob: parseLines(get("cache-dependency-glob")),
@@ -69547,7 +69555,7 @@ async function run() {
   const tmp = process.env.RUNNER_TEMP ?? path18.join(workspace, "..");
   setDefaultEnv("RIG_MODE", "user");
   setDefaultEnv("RIG_CACHE_DIR", path18.join(tmp, "setup-rig-cache"));
-  setDefaultEnv("RIG_PREFER_BINARY", "true");
+  setDefaultEnv("RIG_PREFER_BINARY", inputs.preferBinary);
   setDefaultEnv("NOT_CRAN", "true");
   setDefaultEnv("TZ", "UTC");
   setDefaultEnv("_R_CHECK_SYSTEM_CLOCK_", "FALSE");

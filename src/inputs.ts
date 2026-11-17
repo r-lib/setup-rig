@@ -6,6 +6,7 @@ export interface Inputs {
   rigVersion: string;
   rVersion: string;
   rArch: string;
+  preferBinary: string;
   workingDirectory: string;
   enableCache: Auto;
   cacheDependencyGlob: string[];
@@ -31,6 +32,15 @@ export function parseBool(name: string, value: string): boolean {
   throw new Error(`Input '${name}' must be true or false, not '${value}'.`);
 }
 
+/** `true`, `false` or the number of versions to look back through. */
+export function parsePreferBinary(value: string): string {
+  const v = (value.trim() || "true").toLowerCase();
+  if (v === "true" || v === "false" || /^[0-9]+$/.test(v)) return v;
+  throw new Error(
+    `Input 'prefer-binary' must be true, false or a number, not '${value}'.`,
+  );
+}
+
 export function parseAuto(name: string, value: string): Auto {
   const v = (value.trim() || "auto").toLowerCase();
   if (v === "auto" || v === "true" || v === "false") return v;
@@ -44,6 +54,7 @@ export function parseInputs(get: Getter = core.getInput): Inputs {
     rigVersion: get("rig-version").trim() || "latest",
     rVersion: get("r-version").trim(),
     rArch: get("r-arch").trim(),
+    preferBinary: parsePreferBinary(get("prefer-binary")),
     workingDirectory: get("working-directory").trim() || ".",
     enableCache: parseAuto("enable-cache", get("enable-cache")),
     cacheDependencyGlob: parseLines(get("cache-dependency-glob")),

@@ -122,6 +122,7 @@ credentials in an earlier step if you need them, e.g.
 | `rig-version` | `latest` | rig version: `latest`, `nightly` or `x.y.z` |
 | `r-version` | | R version; empty means `rproj.lock`, then `renv.lock`, then `release` |
 | `r-arch` | | macOS / Windows architecture of R |
+| `prefer-binary` | `true` | sets `RIG_PREFER_BINARY`: `true`, `false` or a number |
 | `working-directory` | `.` | where the lock files are, base of the cache globs |
 | `enable-cache` | `auto` | on for GitHub-hosted runners |
 | `cache-dependency-glob` | `DESCRIPTION`, `rproj.*`, lock files | files in the cache key |
@@ -137,5 +138,5 @@ credentials in an earlier step if you need them, e.g.
 ## Environment
 
 setup-rig sets these for later steps, unless they are already set:
-`RIG_MODE=user`, `RIG_CACHE_DIR`, `RIG_PREFER_BINARY=true`,
+`RIG_MODE=user`, `RIG_CACHE_DIR`, `RIG_PREFER_BINARY` (from `prefer-binary`),
 `NOT_CRAN=true`, `TZ=UTC`, `_R_CHECK_SYSTEM_CLOCK_=FALSE`.
